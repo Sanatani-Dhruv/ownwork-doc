@@ -68,4 +68,4 @@ $route->get('/hello', [
 - It defines HTTP POST Requests for your App.
 - It's Working is Similar to `Router::get()`.
 
-#Incomplete Doc
+# Incomplete Doc
