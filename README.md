@@ -6,3 +6,5 @@ This is Official Documentation of the OwnWork PHP Framework
 ---
 
 - [Worker](./1.x/md/Worker.md)
+- [Controller](./1.x/md/Controller.md)
+- [Router](./1.x/md/Route.md)
