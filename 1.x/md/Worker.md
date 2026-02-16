@@ -20,7 +20,7 @@ make - Making Components, it's arguments:
    > model - Make Model File
    > view - Make View File
 ```
-> You can also run command as `./worker`
+> You can also run command as `./worker`.
 > Make sure to run command from root directory of OwnWork
 
 ## Options
@@ -36,7 +36,7 @@ make - Making Components, it's arguments:
    - model: Making Model in `app/Model/`
    - view: Making View in `resources/views/`
 
-> Each of This Sub-Option Can Accept Another Argument which would be name of Component
+> Each of This Sub-Option Can Accept Another Argument which would be name of Component,
 > Or else the script will ask you to provide a name for your Component interactively
 
 - Worker uses the default template provided in `app/Helper/Template/` for components.
