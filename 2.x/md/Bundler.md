@@ -26,19 +26,20 @@
 - Located at: `appDirectory/bundle/HelperFunction.php`.
 - This file contains global helper functions which are used by OwnWork application itself, and also can be used anywhere further this step, not before it (It may break flow of execution like `undefined function error`).
 - Some Helper Function are like:
-- - `approot()`: Provide the directory path of app root like `/home/username/ownwork`.
-- - `out(string $data)`: Return string escaped for HTML special characters(uses htmlspecialchars() function under hood).
-	> `$data` - string to be escaped
+	- `approot()`: Provide the directory path of app root like `/home/username/ownwork`.
+	- `out(string $data)`: Return string escaped for HTML special characters(uses htmlspecialchars() function under hood).
+		> `$data` - string to be escaped
 
-- - `view(string $string, array $args = [])`: Instantly Call a view and pass arguments as associative array
-	> `$string` - view file path relative to `approot() . "/resources/views/"`.
+	- `view(string $string, array $args = [])`: Instantly Call a view and pass arguments as associative array
+		> `$string` - view file path relative to `approot() . "/resources/views/"`.
 
-	> `$args` -  Pass Optional Arguments as array, which will use `extract()` function to change it in to key-value pairs to variable = value
-- - `comp(string $name, array $args = [], string $dir = "")`: Call Component stored at  `approot() . "/resources/views/component/"`
-	> `$name` - file path relative to `approot() . "/resources/views/component/"`.
+		> `$args` -  Pass Optional Arguments as array, which will use `extract()` function to change it in to key-value pairs to variable = value
+	- `comp(string $name, array $args = [], string $dir = "")`: Call Component stored at  `approot() . "/resources/views/component/"`
+		> `$name` - file path relative to `approot() . "/resources/views/component/"`.
 
-	> `$args` -  Pass Optional Arguments as array, which will use `extract()` function to change it in to key-value pairs to variable = value
-	> `$dir` -  Optional argument to change directory to find component.
+		> `$args` -  Pass Optional Arguments as array, which will use `extract()` function to change it in to key-value pairs to variable = value
+
+		> `$dir` -  Optional argument to change directory to find component.
 
 - Many More Functions can be found and defined in HelperFunction.php, take a look at it to see what more it contains.
 
