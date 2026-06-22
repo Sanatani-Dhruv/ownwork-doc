@@ -28,7 +28,7 @@ $route->end();
 - It defines HTTP GET Requests for your App.
 - It's Arguments:
    - `$request_uri` : Incoming Url request from client ex. `/welcome`
-      - This URL string supports dynamic url matching, read about dynamic URL [HERE](#Dynamic_Url).
+      - This URL string supports dynamic url matching, read about dynamic URL [HERE](#dynamic-Url).
    - `$viewName_methodCall` : It can accept two type of argument:
       - string: It will be treated as View name. We will Learn about Views later.
       - array: It will be treated as Method call:
