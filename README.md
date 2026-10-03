@@ -92,4 +92,4 @@ If you are starting a new OwnWork application, read these in order:
 6. [Views](./views/views.md)
 7. [Templating](./views/templating.md)
 
- > next: `application/controllers.md`
+### Feel free to point out mistakes
