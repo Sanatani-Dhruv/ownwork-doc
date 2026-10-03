@@ -399,7 +399,7 @@ Dispatch
 
  ## HTML Example
 
-```
+```php
 <?php
 
 namespace App\Controller;
@@ -431,7 +431,7 @@ $route->get("/", [
 
  ## JSON Example
 
-```
+```php
 <?php
 
 namespace App\Controller;

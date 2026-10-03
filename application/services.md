@@ -28,7 +28,7 @@ app/Service/UserService.php
 
  A typical service is a normal PHP class:
 
-```
+```php
 <?php
 
 namespace App\Service;
@@ -95,7 +95,7 @@ public function store(
 
  A service can expose methods for application operations:
 
-```
+```php
 <?php
 
 namespace App\Service;
@@ -181,7 +181,7 @@ app/
 
  The service can use the model:
 
-```
+```php
 <?php
 
 namespace App\Service;
@@ -298,7 +298,7 @@ Controller → HTTP response
 
  A service can encapsulate multiple operations:
 
-```
+```php
 <?php
 
 namespace App\Service;

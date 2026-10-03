@@ -34,7 +34,7 @@ app/Controller/UserController.php
 
  A typical controller has the following structure:
 
-```
+```php
 <?php
 
 namespace App\Controller;
@@ -53,7 +53,7 @@ class UserController
 
  For example:
 
-```
+```php
 <?php
 
 namespace App\Controller;
@@ -94,7 +94,7 @@ UserController::index()
 
  Controller methods can receive Coretex's request and response objects.
 
-```
+```php
 <?php
 
 namespace App\Controller;
@@ -446,7 +446,7 @@ app/Controller/
 
  A small controller can combine routing parameters, request data, views, and responses:
 
-```
+```php
 <?php
 
 namespace App\Controller;

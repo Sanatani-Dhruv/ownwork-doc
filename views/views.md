@@ -85,7 +85,7 @@ return view("home.temp.php");
 
  A controller can therefore render a view like this:
 
-```
+```php
 <?php
 
 namespace App\Controller;
@@ -568,7 +568,7 @@ resources/
 
  Controller:
 
-```
+```php
 <?php
 
 namespace App\Controller;

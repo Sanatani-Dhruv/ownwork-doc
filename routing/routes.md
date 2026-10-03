@@ -459,7 +459,7 @@ $result = $route->end();
 
  A typical `bundle/Routes.php` file can look like:
 
-```
+```php
 <?php
 
 namespace Bundle;

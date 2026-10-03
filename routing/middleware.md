@@ -97,7 +97,7 @@ app/Middleware/AuthMiddleware.php
 
  A middleware can simply continue the request:
 
-```
+```php
 <?php
 
 namespace App\Middleware;
@@ -403,7 +403,7 @@ A after
 
  A simple authentication middleware might check a request value before allowing the request to continue:
 
-```
+```php
 <?php
 
 namespace App\Middleware;

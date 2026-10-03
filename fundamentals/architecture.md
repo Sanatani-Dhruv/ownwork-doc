@@ -63,7 +63,7 @@ public/index.php
 
  Its responsibility is to load the application bundler and start it:
 
-```
+```php
 <?php
 
 require __DIR__ . "/../bundle/Bundler.php";

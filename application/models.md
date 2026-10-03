@@ -28,7 +28,7 @@ app/Model/UserModel.php
 
  A typical generated model has the following structure:
 
-```
+```php
 <?php
 
 namespace App\Model;
@@ -73,7 +73,7 @@ class UserModel
 
  A model can be a plain PHP class:
 
-```
+```php
 <?php
 
 namespace App\Model;
@@ -93,7 +93,7 @@ class UserModel
 
  A controller can instantiate a model directly:
 
-```
+```php
 <?php
 
 namespace App\Controller;
@@ -264,7 +264,7 @@ $user = $userModel->find($id);
 
  For example:
 
-```
+```php
 <?php
 
 namespace App\Model;
@@ -306,7 +306,7 @@ class UserModel
 
  A service can encapsulate application operations:
 
-```
+```php
 <?php
 
 namespace App\Service;
@@ -331,7 +331,7 @@ class UserService
 
  A controller can then use the service:
 
-```
+```php
 <?php
 
 namespace App\Controller;

@@ -12,7 +12,7 @@ public/index.php
 
  The entry point loads the application bundler:
 
-```
+```php
 <?php
 
 require __DIR__ . "/../bundle/Bundler.php";
@@ -37,7 +37,7 @@ bundle/Routes.php
 
  For example:
 
-```
+```php
 <?php
 
 $route->get("/", "home.temp.php");
@@ -125,7 +125,7 @@ app/Controller/UserController.php
 
  A basic controller action can be written as:
 
-```
+```php
 <?php
 
 namespace App\Controller;
@@ -163,7 +163,7 @@ $route->get("/users", [
 
  The complete route file can look like:
 
-```
+```php
 <?php
 
 use App\Controller\UserController;
@@ -307,7 +307,7 @@ my-app/
 
  The route configuration:
 
-```
+```php
 <?php
 
 use App\Controller\UserController;
@@ -322,7 +322,7 @@ $route->get("/users", [
 
  The controller:
 
-```
+```php
 <?php
 
 namespace App\Controller;

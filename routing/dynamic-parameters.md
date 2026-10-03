@@ -210,7 +210,7 @@ $id = $params["id"];
 
  A complete controller action can look like:
 
-```
+```php
 <?php
 
 namespace App\Controller;

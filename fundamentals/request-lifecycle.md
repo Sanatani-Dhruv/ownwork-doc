@@ -70,7 +70,7 @@ public/index.php
 
  `public/index.php` loads the OwnWork bundler:
 
-```
+```php
 <?php
 
 require __DIR__ . "/../bundle/Bundler.php";

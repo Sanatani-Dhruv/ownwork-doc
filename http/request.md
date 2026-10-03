@@ -387,7 +387,7 @@ $route->get("/products/{id}", [
 
  Controller:
 
-```
+```php
 <?php
 
 namespace App\Controller;
@@ -432,7 +432,7 @@ GET /products/25
 
  ## Example: Request in Middleware
 
-```
+```php
 <?php
 
 namespace App\Middleware;
