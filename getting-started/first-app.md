@@ -6,7 +6,7 @@
 
  Every OwnWork request starts at:
 
-```
+```bash
 public/index.php
 ```
 
@@ -37,7 +37,7 @@ ob_end_flush();
 
  Application routes are defined in:
 
-```
+```bash
 bundle/Routes.php
 ```
 
@@ -57,13 +57,13 @@ $route->get("/", "home.temp.php");
 
  Create the corresponding view:
 
-```
+```bash
 resources/views/home.temp.php
 ```
 
  with:
 
-```
+```html
 <h1>Welcome to OwnWork</h1>
 
 <p>Your application is running.</p>
@@ -71,13 +71,13 @@ resources/views/home.temp.php
 
  Start the development server:
 
-```
+```bash
 php worker serve
 ```
 
  Then open:
 
-```
+```bash
 http://localhost:8000
 ```
 
@@ -90,8 +90,6 @@ http://localhost:8000
  A route can also use a PHP callable instead of a view name:
 
 ```php
-<?php
-
 $route->get("/hello", function () {
     return "Hello from OwnWork";
 });
@@ -99,7 +97,7 @@ $route->get("/hello", function () {
 
  Opening:
 
-```
+```bash
 http://localhost:8000/hello
 ```
 
@@ -113,19 +111,19 @@ http://localhost:8000/hello
 
  Generate one with:
 
-```
+```bash
 php worker make controller UserController
 ```
 
  The generated controller is placed in:
 
-```
+```bash
 app/Controller/UserController.php
 ```
 
  The worker creates the controller from:
 
-```
+```bash
 resources/template/Controller.php
 ```
 
@@ -167,8 +165,6 @@ use App\Controller\UserController;
  Then register the controller action:
 
 ```php
-<?php
-
 $route->get("/users", [
     UserController::class,
     "index"
@@ -178,8 +174,6 @@ $route->get("/users", [
  The complete route file can look like:
 
 ```php
-<?php
-
 use App\Controller\UserController;
 
 $route->get("/", "home.temp.php");
@@ -196,7 +190,7 @@ $route->get("/users", [
 
  The `/users` request is resolved to:
 
-```
+```php
 UserController::index()
 ```
 
@@ -209,8 +203,6 @@ UserController::index()
  For example:
 
 ```php
-<?php
-
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -225,7 +217,7 @@ $route->get("/users/{id}", [
 
  matches the route and produces:
 
-```
+```php
 id = 42
 ```
 
@@ -234,8 +226,6 @@ id = 42
  A controller action can therefore receive the request and response objects followed by the route parameters:
 
 ```php
-<?php
-
 public function show(
     Request $request,
     Response $response,
@@ -252,8 +242,6 @@ public function show(
  For example:
 
 ```php
-<?php
-
 public function index(
     Request $request,
     Response $response
@@ -266,13 +254,13 @@ public function index(
 
  Create the corresponding view:
 
-```
+```bash
 resources/views/users.temp.php
 ```
 
  For example:
 
-```
+```html
 <h1>Users</h1>
 
 <p>Welcome to the users page.</p>
@@ -280,7 +268,7 @@ resources/views/users.temp.php
 
  The route now follows this flow:
 
-```
+```bash
 GET /users
     ↓
 Route
@@ -297,8 +285,6 @@ HTTP response
  The `view()` helper accepts an array of data:
 
 ```php
-<?php
-
 return view("users.temp.php", [
     "title" => "Users",
 ]);
@@ -308,7 +294,7 @@ return view("users.temp.php", [
 
  For example:
 
-```
+```html
 <h1>{{ $title }}</h1>
 ```
 
@@ -322,23 +308,23 @@ return view("users.temp.php", [
 
  For example:
 
-```
+```bash
 php worker make controller UserController
 ```
 
-```
+```bash
 php worker make middleware AuthMiddleware
 ```
 
-```
+```bash
 php worker make model UserModel
 ```
 
-```
+```bash
 php worker make service UserService
 ```
 
-```
+```bash
 php worker make view users
 ```
 
@@ -352,7 +338,7 @@ php worker make view users
 
  The generated files are placed in:
 
-```
+```bash
 app/Controller/
 app/Middleware/
 app/Model/
@@ -362,7 +348,7 @@ resources/views/
 
  The worker uses the corresponding templates under:
 
-```
+```bash
 resources/template/
 ```
 
@@ -372,7 +358,7 @@ resources/template/
 
  A minimal application using a controller and views can contain:
 
-```
+```bash
 my-app/
 ├── app/
 │   └── Controller/
@@ -428,13 +414,13 @@ class UserController
 
  The home view:
 
-```
+```html
 <h1>Welcome to OwnWork</h1>
 ```
 
  The users view:
 
-```
+```html
 <h1>Users</h1>
 ```
 
@@ -442,7 +428,7 @@ class UserController
 
  At a high level, an OwnWork request follows this process:
 
-```
+```bash
 public/index.php
       ↓
 Bundler

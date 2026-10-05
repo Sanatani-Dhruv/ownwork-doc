@@ -12,7 +12,7 @@ use Dhruv125\Coretex\Support\Request;
 
  A controller can receive the request object:
 
-```
+```php
 public function index(
     Request $request,
     Response $response
@@ -29,13 +29,13 @@ public function index(
 
  Read an attribute with:
 
-```
+```php
 $value = $request->getAttribute("name");
 ```
 
  A default value can also be supplied:
 
-```
+```php
 $value = $request->getAttribute(
     "name",
     null
@@ -50,7 +50,7 @@ $value = $request->getAttribute(
 
  Given:
 
-```
+```php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -65,7 +65,7 @@ $route->get("/users/{id}", [
 
  produces dynamic parameters equivalent to:
 
-```
+```php
 [
     "id" => "42"
 ]
@@ -73,7 +73,7 @@ $route->get("/users/{id}", [
 
  Read them with:
 
-```
+```php
 $params = $request->getAttribute(
     "dynamicParams"
 );
@@ -89,7 +89,7 @@ $id = $params["id"];
 
  For:
 
-```
+```php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -98,13 +98,13 @@ $route->get("/users/{id}", [
 
  the matched route is:
 
-```
+```bash
 /users/{id}
 ```
 
  It can be accessed with:
 
-```
+```php
 $routePattern = $request->getAttribute(
     "currentRoute"
 );
@@ -118,13 +118,13 @@ $routePattern = $request->getAttribute(
 
  For a request such as:
 
-```
+```bash
 /users?page=2
 ```
 
  the query string contains:
 
-```
+```bash
 page=2
 ```
 
@@ -138,7 +138,7 @@ page=2
 
  For example:
 
-```
+```php
 $name = $request->get("name");
 ```
 
@@ -152,7 +152,7 @@ $name = $request->get("name");
 
  Typical request information includes headers such as:
 
-```
+```http
 Accept
 Content-Type
 Authorization
@@ -175,7 +175,7 @@ User-Agent
 
  Information such as:
 
-```
+```bash
 REQUEST_METHOD
 REQUEST_URI
 HTTP_HOST
@@ -189,7 +189,7 @@ HTTP_HOST
 
  Middleware receives the same request object used during route processing:
 
-```
+```php
 public static function handle(
     Request $request,
     Response $response,
@@ -217,7 +217,7 @@ public static function handle(
 
  Example:
 
-```
+```php
 public function show(
     Request $request,
     Response $response
@@ -246,7 +246,7 @@ public function show(
 
  Examples include:
 
-```
+```bash
 query parameters
 form data
 request body
@@ -258,14 +258,14 @@ request body
 
  Examples in OwnWork include:
 
-```
+```bash
 dynamicParams
 currentRoute
 ```
 
  Conceptually:
 
-```
+```bash
 HTTP Request
 ├── Input
 │   ├── Query
@@ -282,13 +282,13 @@ HTTP Request
 
  The request object can expose its complete attribute collection:
 
-```
+```php
 $attributes = $request->getAttributes();
 ```
 
  A single attribute can be retrieved with:
 
-```
+```php
 $value = $request->getAttribute(
     "dynamicParams"
 );
@@ -300,7 +300,7 @@ $value = $request->getAttribute(
 
  The underlying request abstraction supports adding a derived request attribute:
 
-```
+```php
 $request = $request->withAttribute(
     "key",
     $value
@@ -315,7 +315,7 @@ $request = $request->withAttribute(
 
  The underlying request abstraction also supports:
 
-```
+```php
 $request = $request->withoutAttribute(
     "key"
 );
@@ -339,7 +339,7 @@ withParsedBody()
 
  When using these methods, keep the returned instance:
 
-```
+```php
 $request = $request->withAttribute(
     "user",
     $user
@@ -352,7 +352,7 @@ $request = $request->withAttribute(
 
  The request object participates in the OwnWork lifecycle:
 
-```
+```bash
 HTTP Request
      ↓
 public/index.php
@@ -378,7 +378,7 @@ Response
 
  Route:
 
-```
+```php
 $route->get("/products/{id}", [
     ProductController::class,
     "show"
@@ -416,13 +416,13 @@ class ProductController
 
  Request:
 
-```
+```http
 GET /products/25
 ```
 
  The controller receives:
 
-```
+```php
 [
     "id" => "25"
 ]
@@ -433,8 +433,6 @@ GET /products/25
  ## Example: Request in Middleware
 
 ```php
-<?php
-
 namespace App\Middleware;
 
 use Dhruv125\Coretex\Support\Request;
@@ -464,7 +462,7 @@ class LoggingMiddleware
 
  PHP exposes incoming HTTP information through superglobals such as:
 
-```
+```php
 $_GET
 $_POST
 $_SERVER
@@ -476,7 +474,7 @@ $_FILES
 
  For example:
 
-```
+```php
 $request->getAttribute("dynamicParams");
 ```
 
@@ -492,7 +490,7 @@ $request->getAttribute("dynamicParams");
 
  This distinction matters when documenting or using request methods:
 
-```
+```bash
 OwnWork
 ├── Kernel
 │   └── Request lifecycle

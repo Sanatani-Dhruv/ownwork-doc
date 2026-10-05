@@ -8,7 +8,7 @@
 
  Running:
 
-```
+```bash
 php worker
 ```
 
@@ -16,7 +16,7 @@ php worker
 
  The currently registered commands are:
 
-```
+```bash
 make
 serve
 transpile
@@ -27,19 +27,19 @@ clear:viewcache
 
  The `make` command generates application components from the templates under:
 
-```
+```bash
 resources/template/
 ```
 
  General syntax:
 
-```
+```bash
 php worker make <type> <name>
 ```
 
  Supported component types are:
 
-```
+```bash
 controller
 middleware
 service
@@ -49,7 +49,7 @@ view
 
  For example:
 
-```
+```bash
 php worker make controller UserController
 php worker make middleware AuthMiddleware
 php worker make service UserService
@@ -61,91 +61,91 @@ php worker make view users/index
 
  ## Generate a Controller
 
-```
+```bash
 php worker make controller UserController
 ```
 
  The controller is created under:
 
-```
+```bash
 app/Controller/
 ```
 
  using:
 
-```
+```bash
 resources/template/Controller.php
 ```
 
  ## Generate Middleware
 
-```
+```bash
 php worker make middleware AuthMiddleware
 ```
 
  The middleware is created under:
 
-```
+```bash
 app/Middleware/
 ```
 
  using:
 
-```
+```bash
 resources/template/Middleware.php
 ```
 
  ## Generate a Service
 
-```
+```bash
 php worker make service UserService
 ```
 
  The service is created under:
 
-```
+```bash
 app/Service/
 ```
 
  using:
 
-```
+```bash
 resources/template/Service.php
 ```
 
  ## Generate a Model
 
-```
+```bash
 php worker make model UserModel
 ```
 
  The model is created under:
 
-```
+```bash
 app/Model/
 ```
 
  using:
 
-```
+```bash
 resources/template/Model.php
 ```
 
  ## Generate a View
 
-```
+```bash
 php worker make view users/index
 ```
 
  Views are created under:
 
-```
+```bash
 resources/views/
 ```
 
  using:
 
-```
+```bash
 resources/template/View.php
 ```
 
@@ -155,13 +155,13 @@ resources/template/View.php
 
  The worker takes the component name from the third argument:
 
-```
+```bash
 php worker make controller UserController
 ```
 
  Internally, the worker uses that name when creating the file and replaces:
 
-```
+```bash
 DEFAULT_NAME
 ```
 
@@ -179,38 +179,38 @@ DEFAULT_NAME
 
  Run:
 
-```
+```bash
 php worker serve
 ```
 
  The default port is:
 
-```
+```bash
 8000
 ```
 
  The worker starts PHP's built-in development server with:
 
-```
+```bash
 --server=localhost:8000
 --docroot=public
 ```
 
  A different port can be supplied:
 
-```
+```bash
 php worker serve 8080
 ```
 
  The resulting server uses:
 
-```
+```bash
 http://localhost:8080
 ```
 
  The default command therefore corresponds to:
 
-```
+```bash
 http://localhost:8000
 ```
 
@@ -218,7 +218,7 @@ http://localhost:8000
 
  Run:
 
-```
+```bash
 php worker transpile
 ```
 
@@ -226,19 +226,19 @@ php worker transpile
 
  Source templates are stored in:
 
-```
+```bash
 resources/views/
 ```
 
  Compiled views are stored in:
 
-```
+```bash
 storage/views/
 ```
 
  The worker also maintains:
 
-```
+```bash
 storage/views.json
 ```
 
@@ -248,7 +248,7 @@ storage/views.json
 
  Without a numeric argument or `build`, the transpiler runs as a watcher.
 
-```
+```bash
 php worker transpile
 ```
 
@@ -260,19 +260,19 @@ php worker transpile
 
  The transpiler accepts a numeric argument specifying how many transpilation operations should occur:
 
-```
+```bash
 php worker transpile 1
 ```
 
  A special `build` argument performs a production-style build:
 
-```
+```bash
 php worker transpile build
 ```
 
  The build operation:
 
-```
+```bash
 scan storage
     ↓
 scan resources
@@ -288,25 +288,25 @@ write storage/views.json
 
  Compiled view files can be removed with:
 
-```
+```bash
 php worker clear:viewcache
 ```
 
  The command clears files inside:
 
-```
+```bash
 storage/views/
 ```
 
  It does not remove the source templates under:
 
-```
+```bash
 resources/views/
 ```
 
  After clearing the cache, views can be regenerated with:
 
-```
+```bash
 php worker transpile
 ```
 
@@ -316,13 +316,13 @@ php worker transpile
 
  Development server:
 
-```
+```bash
 composer run dev
 ```
 
  View transpilation:
 
-```
+```bash
 composer run transpile
 ```
 
@@ -330,7 +330,7 @@ composer run transpile
 
  The `transpile` script invokes:
 
-```
+```bash
 php worker transpile
 ```
 
@@ -340,13 +340,13 @@ php worker transpile
 
  Install dependencies:
 
-```
+```bash
 npm i
 ```
 
  Then:
 
-```
+```bash
 npm run dev
 ```
 

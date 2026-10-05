@@ -6,7 +6,7 @@
 
  The simplest way to start the PHP application is:
 
-```
+```bash
 composer run dev
 ```
 
@@ -18,19 +18,19 @@ composer run dev
 
  The default server address is:
 
-```
+```bash
 http://localhost:8000
 ```
 
  The same server can be started directly through the OwnWork worker:
 
-```
+```bash
 php worker serve
 ```
 
  To use another port:
 
-```
+```bash
 php worker serve 8080
 ```
 
@@ -40,7 +40,7 @@ php worker serve 8080
 
  OwnWork uses:
 
-```
+```bash
 public/index.php
 ```
 
@@ -50,7 +50,7 @@ public/index.php
 
  A request therefore begins with:
 
-```
+```bash
 Browser
    ↓
 public/index.php
@@ -82,13 +82,13 @@ Response
 
  A new project is initialized with `.env.example` during:
 
-```
+```bash
 composer run setup
 ```
 
  The current example environment file contains:
 
-```
+```bash
 APP_NAME=Ownwork
 
 DB_DRIVER=sql
@@ -105,7 +105,7 @@ ERROR_PAGE_LOCATION=resources/appviews/
 
  The environment file is loaded by Coretex's `Environment::setenv()` implementation. The environment loader reads:
 
-```
+```bash
 .env
 ```
 
@@ -117,13 +117,13 @@ ERROR_PAGE_LOCATION=resources/appviews/
 
  When:
 
-```
+```bash
 DEV_ENV=true
 ```
 
  Coretex enables PHP error and startup-error display and sets PHP error reporting to:
 
-```
+```php
 E_ALL ^ E_DEPRECATED
 ```
 
@@ -140,7 +140,7 @@ E_ALL ^ E_DEPRECATED
 
  The handler writes errors and exceptions to:
 
-```
+```bash
 storage/error.log
 ```
 
@@ -150,13 +150,13 @@ storage/error.log
 
  The example environment file contains:
 
-```
+```bash
 ERROR_PAGE_LOCATION=resources/appviews/
 ```
 
  OwnWork's `GlobalErrorHandler` currently uses:
 
-```
+```bash
 resources/appviews/
 ```
 
@@ -181,13 +181,13 @@ resources/appviews/
 
  Errors and exceptions are logged to:
 
-```
+```bash
 storage/error.log
 ```
 
  When `DEV_ENV` is not enabled, the handler responds with HTTP status `500` and displays the application's generic error page from:
 
-```
+```bash
 resources/appviews/no-info-error.php
 ```
 
@@ -207,13 +207,13 @@ resources/appviews/no-info-error.php
 
  These templates are transpiled into generated PHP files under:
 
-```
+```bash
 storage/views/
 ```
 
  Run the development transpiler with:
 
-```
+```bash
 php worker transpile
 ```
 
@@ -221,7 +221,7 @@ php worker transpile
 
  When changes are detected, it clears the generated view cache, recompiles the templates, and updates:
 
-```
+```bash
 storage/views.json
 ```
 
@@ -229,13 +229,13 @@ storage/views.json
 
  The source templates remain in:
 
-```
+```bash
 resources/views/
 ```
 
  and the generated PHP files are stored in:
 
-```
+```bash
 storage/views/
 ```
 
@@ -243,7 +243,7 @@ storage/views/
 
  For a one-time production-oriented transpilation pass, run:
 
-```
+```bash
 php worker transpile build
 ```
 
@@ -261,31 +261,31 @@ php worker transpile build
 
  To remove generated compiled view files, run:
 
-```
+```bash
 php worker clear:viewcache
 ```
 
  This clears files inside:
 
-```
+```bash
 storage/views/
 ```
 
  It does not remove the source templates in:
 
-```
+```bash
 resources/views/
 ```
 
  The worker's clear operation currently removes the compiled files but does not remove `storage/views.json`. If the view mapping also needs to be regenerated, run the transpiler afterward:
 
-```
+```bash
 php worker transpile build
 ```
 
  or:
 
-```
+```bash
 php worker transpile
 ```
 
@@ -297,31 +297,31 @@ php worker transpile
 
  Install the frontend dependencies with:
 
-```
+```bash
 npm install
 ```
 
  The current `package.json` defines these frontend commands:
 
-```
+```bash
 npm run tw:dev
 ```
 
  for the Tailwind CSS development watcher,
 
-```
+```bash
 npm run tw:build
 ```
 
  for the Tailwind CSS build,
 
-```
+```bash
 npm run js:run
 ```
 
  for the JavaScript development/watch process, and:
 
-```
+```bash
 npm run js:build
 ```
 
@@ -329,7 +329,7 @@ npm run js:build
 
  The project also provides:
 
-```
+```bash
 npm run dev
 ```
 
@@ -341,7 +341,7 @@ npm run dev
 
  A typical development workflow is:
 
-```
+```bash
 1. Start the PHP development server.
 2. Start the view transpiler when working on `.temp.php` views.
 3. Start the frontend watcher when working on CSS or JavaScript.
@@ -353,19 +353,19 @@ npm run dev
 
  For PHP application development:
 
-```
+```bash
 composer run dev
 ```
 
  For view development:
 
-```
+```bash
 php worker transpile
 ```
 
  For frontend development:
 
-```
+```bash
 npm install
 npm run dev
 ```
@@ -378,31 +378,31 @@ npm run dev
 
  Controller:
 
-```
+```bash
 php worker make controller UserController
 ```
 
  Middleware:
 
-```
+```bash
 php worker make middleware AuthMiddleware
 ```
 
  Model:
 
-```
+```bash
 php worker make model UserModel
 ```
 
  Service:
 
-```
+```bash
 php worker make service UserService
 ```
 
  View:
 
-```
+```bash
 php worker make view users
 ```
 
@@ -416,13 +416,13 @@ php worker make view users
 
  Generated files are created from templates under:
 
-```
+```bash
 resources/template/
 ```
 
  and placed in:
 
-```
+```bash
 app/Controller/
 app/Middleware/
 app/Model/
@@ -436,7 +436,7 @@ resources/views/
 
  During development, the important directories are:
 
-```
+```bash
 app/
 ├── Controller/
 ├── Http/
@@ -477,7 +477,7 @@ storage/
 
  The view transpiler also maintains:
 
-```
+```bash
 storage/views.json
 ```
 

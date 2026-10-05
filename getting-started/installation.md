@@ -17,13 +17,13 @@
 
  Create an OwnWork application with Composer:
 
-```
+```bash
 composer create-project dhruv125/ownwork my-app
 ```
 
  Then enter the project directory:
 
-```
+```bash
 cd my-app
 ```
 
@@ -31,7 +31,7 @@ cd my-app
 
  Run the setup script:
 
-```
+```bash
 composer run setup
 ```
 
@@ -53,7 +53,7 @@ composer run setup
 
  After setup, the project should contain the Composer autoloader and an environment file:
 
-```
+```bash
 my-app/
 ├── .env
 ├── vendor/
@@ -65,7 +65,7 @@ my-app/
 
  If either is missing, OwnWork stops execution and displays a setup error instructing you to run:
 
-```
+```bash
 composer run setup
 ```
 
@@ -73,7 +73,7 @@ composer run setup
 
  The Composer development command starts PHP's built-in development server:
 
-```
+```bash
 composer run dev
 ```
 
@@ -85,13 +85,13 @@ composer run dev
 
  The application is therefore available at:
 
-```
+```bash
 http://localhost:8000
 ```
 
  The same server can be started directly through the OwnWork worker:
 
-```
+```bash
 php worker serve
 ```
 
@@ -99,13 +99,13 @@ php worker serve
 
  To use another port:
 
-```
+```bash
 php worker serve 8080
 ```
 
  The application will then be available at:
 
-```
+```bash
 http://localhost:8080
 ```
 
@@ -123,13 +123,13 @@ http://localhost:8080
 
  Install the Node dependencies with:
 
-```
+```bash
 npm install
 ```
 
  The project defines the following frontend commands:
 
-```
+```bash
 npm run tw:dev
 npm run tw:build
 npm run js:run
@@ -142,7 +142,7 @@ npm run js:build
 
  A basic OwnWork application can therefore be initialized and started with:
 
-```
+```bash
 composer create-project dhruv125/ownwork my-app
 cd my-app
 composer run setup
@@ -151,7 +151,7 @@ composer run dev
 
  For projects using the frontend tooling, install the Node dependencies separately:
 
-```
+```bash
 npm install
 ```
 
