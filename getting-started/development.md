@@ -193,7 +193,7 @@ resources/appviews/no-info-error.php
 
  if that file exists. Otherwise it displays:
 
-```
+```http
 500 Internal Server Error
 ```
 
@@ -501,5 +501,3 @@ storage/views.json
 | Build Tailwind CSS | `npm run tw:build` |
 | Run JavaScript development process | `npm run js:run` |
 | Build JavaScript | `npm run js:build` |
-
-> `fundamentals/architecture.md`

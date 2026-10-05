@@ -42,7 +42,7 @@ composer run setup
 
  The setup command is defined in the project's Composer configuration:
 
-```
+```php
 "setup": [
     "composer install",
     "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
@@ -156,5 +156,3 @@ npm install
 ```
 
  At runtime, the application starts from `public/index.php`, which bootstraps OwnWork through its `Bundler`.
-
- > `getting-started/first-app.md`

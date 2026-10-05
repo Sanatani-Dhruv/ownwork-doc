@@ -4,7 +4,7 @@
 
  A typical project has the following structure:
 
-```
+```bash
 ownwork/
 ├── app/
 │   ├── Controller/
@@ -49,11 +49,11 @@ ownwork/
 
  The exact contents can change as application code and generated assets are added.
 
- ## `app/`
+ ## app/
 
  The `app` directory contains application code and the application's HTTP kernel.
 
-```
+```bash
 app/
 ├── Controller/
 ├── Http/
@@ -62,13 +62,13 @@ app/
 └── Service/
 ```
 
- ### `app/Controller/`
+ ### app/Controller/
 
  Controllers contain application handlers invoked by routes.
 
  For example:
 
-```
+```bash
 app/Controller/UserController.php
 ```
 
@@ -95,33 +95,33 @@ class UserController
 }
 ```
 
- ### `app/Http/`
+ ### app/Http/
 
  This directory contains the OwnWork HTTP kernel:
 
-```
+```bash
 app/Http/Kernel.php
 ```
 
  `Kernel` coordinates request processing, including route registration, route matching, middleware execution, and route resolution.
 
- ### `app/Middleware/`
+ ### app/Middleware/
 
  Application middleware is stored here.
 
  For example:
 
-```
+```bash
 app/Middleware/AuthMiddleware.php
 ```
 
  Middleware can inspect a request, terminate processing by returning a response, or continue through the pipeline by calling `$next()`.
 
- ### `app/Model/`
+ ### app/Model/
 
  Models belong under:
 
-```
+```bash
 app/Model/
 ```
 
@@ -129,17 +129,17 @@ app/Model/
 
  For example:
 
-```
+```bash
 app/Model/UserModel.php
 ```
 
  The persistence implementation is application-specific.
 
- ### `app/Service/`
+ ### app/Service/
 
  Application services belong under:
 
-```
+```bash
 app/Service/
 ```
 
@@ -147,24 +147,24 @@ app/Service/
 
  For example:
 
-```
+```bash
 app/Service/UserService.php
 ```
 
  OwnWork does not require a specific service base class or interface.
 
- ## `bundle/`
+ ## bundle/
 
  The `bundle` directory contains application bootstrap, routes, and global helpers.
 
-```
+```bash
 bundle/
 ├── Bundler.php
 ├── Helper.php
 └── Routes.php
 ```
 
- ### `bundle/Bundler.php`
+ ### bundle/Bundler.php
 
  `Bundler.php` bootstraps the application.
 
@@ -172,23 +172,19 @@ bundle/
 
  The public entry point loads this file before starting the application.
 
- ### `bundle/Routes.php`
+ ### bundle/Routes.php
 
  Application routes are registered here.
 
  For example:
 
 ```php
-<?php
-
 $route->get("/", "home.temp.php");
 ```
 
  A controller route can also be registered:
 
 ```php
-<?php
-
 $route->get("/users", [
     UserController::class,
     "index"
@@ -197,43 +193,35 @@ $route->get("/users", [
 
  The `$route` object is supplied by the OwnWork kernel.
 
- ### `bundle/Helper.php`
+ ### bundle/Helper.php
 
  This file contains OwnWork's global helper functions.
 
  Examples include:
 
 ```php
-<?php
-
 approot();
 ```
 
 ```php
-<?php
-
 env("APP_NAME");
 ```
 
 ```php
-<?php
-
 view("home.temp.php");
 ```
 
 ```php
-<?php
-
 comp("button.php");
 ```
 
  The helper file is loaded through Composer's file autoload configuration.
 
- ## `public/`
+ ## public/
 
  The `public` directory is the web-facing directory.
 
-```
+```bash
 public/
 ├── .htaccess
 ├── build/
@@ -243,7 +231,7 @@ public/
 
  Only files intended to be directly accessible by the web server should normally be placed under `public/`.
 
- ### `public/index.php`
+ ### public/index.php
 
  This is the application's front controller.
 
@@ -266,27 +254,27 @@ $app->bundle();
 ob_end_flush();
 ```
 
- ### `public/.htaccess`
+ ### public/.htaccess
 
  The Apache configuration file is located in the public directory.
 
  It can be used when deploying OwnWork with Apache for URL handling.
 
- ### `public/build/`
+ ### public/build/
 
  This directory contains generated frontend build output.
 
- ### `public/styles/`
+ ### public/styles/
 
  This directory contains browser-accessible styles.
 
  The default project includes framework/default CSS resources here.
 
- ## `resources/`
+ ## resources/
 
  The `resources` directory contains source resources used by the application and development tooling.
 
-```
+```bash
 resources/
 ├── appviews/
 ├── css/
@@ -295,25 +283,25 @@ resources/
 └── views/
 ```
 
- ### `resources/views/`
+ ### resources/views/
 
  Application view source files are stored here.
 
  For example:
 
-```
+```bash
 resources/views/home.temp.php
 ```
 
  OwnWork supports ordinary PHP views as well as `.temp.php` template views.
 
- ### `resources/appviews/`
+ ### resources/appviews/
 
  `appviews` contains views used by OwnWork/Coretex itself, particularly framework error-related pages.
 
  Examples include:
 
-```
+```bash
 resources/appviews/
 ├── error_layout.php
 ├── no-info-error.php
@@ -326,13 +314,13 @@ resources/appviews/
 
  Applications normally do not need to modify these files unless they intentionally customize the framework's error presentation.
 
- ### `resources/template/`
+ ### resources/template/
 
  This directory contains templates used by the `worker make` commands.
 
  For example, generated application components are based on templates such as:
 
-```
+```bash
 resources/template/
 ├── Controller.php
 ├── Middleware.php
@@ -343,31 +331,31 @@ resources/template/
 
  When a developer runs:
 
-```
+```bash
 php worker make controller UserController
 ```
 
  the worker uses the corresponding template to generate the application file.
 
- ### `resources/css/`
+ ### resources/css/
 
  Contains source CSS resources.
 
  The default project includes the Tailwind CSS source here.
 
- ### `resources/js/`
+ ### resources/js/
 
  Contains application JavaScript source files.
 
  Frontend tooling can process these resources into browser-accessible build output.
 
- ## `storage/`
+ ## storage/
 
  The `storage` directory contains generated application files.
 
  The template system uses:
 
-```
+```bash
 storage/views/
 ```
 
@@ -375,23 +363,23 @@ storage/views/
 
  The view mapping is stored in:
 
-```
+```bash
 storage/views.json
 ```
 
  Generated files under `storage/` should generally not be edited as application source code.
 
- ## `vendor/`
+ ## vendor/
 
  Composer installs PHP dependencies into:
 
-```
+```bash
 vendor/
 ```
 
  The directory contains:
 
-```
+```bash
 vendor/autoload.php
 ```
 
@@ -403,13 +391,13 @@ vendor/autoload.php
 
  If a dependency needs to change, modify the Composer configuration and run Composer.
 
- ## `.env`
+ ## .env
 
  The `.env` file contains environment-specific configuration loaded by Coretex during OwnWork startup.
 
  For example:
 
-```
+```bash
 APP_NAME=Ownwork
 
 DEV_ENV=true
@@ -420,25 +408,25 @@ OWNWORK_ERROR_HANDLER=true
 
  The `.env` file is environment-specific and should not normally be committed when it contains secrets.
 
- ## `.env.example`
+ ## .env.example
 
  `.env.example` provides the initial environment configuration template.
 
  The OwnWork setup command creates `.env` from this file when `.env` does not already exist.
 
- ## `composer.json`
+ ## composer.json
 
  `composer.json` defines the PHP package configuration, dependencies, autoloading, and Composer scripts.
 
  OwnWork declares Coretex as a dependency:
 
-```
+```bash
 dhruv125/coretex
 ```
 
  It also defines scripts used for common development operations.
 
- ## `package.json`
+ ## package.json
 
  `package.json` defines the optional Node.js development tooling.
 
@@ -446,31 +434,31 @@ dhruv125/coretex
 
  Node.js is not required for the PHP framework itself.
 
- ## `worker`
+ ## worker
 
  The `worker` file is OwnWork's command-line manager.
 
  Run commands with:
 
-```
+```bash
 php worker <command>
 ```
 
  Examples include:
 
-```
+```bash
 php worker serve
 ```
 
-```
+```bash
 php worker make controller UserController
 ```
 
-```
+```bash
 php worker transpile
 ```
 
-```
+```bash
 php worker clear:viewcache
 ```
 
@@ -480,7 +468,7 @@ php worker clear:viewcache
 
  An OwnWork application sits above OwnWork and its Coretex dependency:
 
-```
+```bash
 Application
 │
 ├── app/
@@ -506,7 +494,7 @@ Application
 
  Coretex is installed through Composer and lives under:
 
-```
+```bash
 vendor/
 ```
 
@@ -518,7 +506,7 @@ vendor/
 
  ### Application source
 
-```
+```bash
 app/
 bundle/
 resources/views/
@@ -528,31 +516,29 @@ resources/js/
 
  ### Framework and application tooling
 
-```
+```bash
 resources/template/
 worker
 ```
 
  ### Public/generated assets
 
-```
+```bash
 public/build/
 public/styles/
 ```
 
  ### Generated view output
 
-```
+```bash
 storage/views/
 storage/views.json
 ```
 
  ### External dependencies
 
-```
+```bash
 vendor/
 ```
 
  The distinction is important because source files should be edited directly, while generated output should normally be regenerated by the appropriate OwnWork or Composer command.
-
-> `fundamentals/request-lifecycle.md`

@@ -211,7 +211,7 @@ $route->get("/users/{id}", [
 
  A request such as:
 
-```
+```bash
 /users/42
 ```
 
@@ -462,5 +462,3 @@ HTTP response
 - components
 - services
 - the worker CLI
-
- > `getting-started/development.md`
