@@ -1,10 +1,10 @@
-# Models
+ # Models
 
-Models belong to the application layer and are stored under:
+ Models belong to the application layer and are stored under:
 
-```text
+```
 app/Model/
-````
+```
 
  OwnWork provides a model generator through the `worker` command, but it does not impose a database ORM or a specific persistence implementation.
 
@@ -66,8 +66,6 @@ class UserModel
  The `app/Model/` directory is an application convention rather than a complete database abstraction.
 
  If an application needs database functionality, it can use an external PHP package or its own database implementation.
-
- The OwnWork README specifically describes additional database functionality as something that can be provided by other packages.  Packagist
 
  ## Simple Model
 
@@ -419,8 +417,6 @@ public function find($id)
 
  The exception can propagate through the controller and request lifecycle where the application's error handling can process it.
 
- See Error Handling.
-
  ## Model Independence
 
  Models do not need to know about HTTP routing.
@@ -522,4 +518,4 @@ Return view or response
 
  This keeps the OwnWork model layer minimal while allowing applications to choose the database and persistence architecture that fits their requirements.
 
-> next: `application/services.md`
+ > `views/views.md`

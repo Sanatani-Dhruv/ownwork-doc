@@ -1,36 +1,31 @@
 # Configuration Helpers
 
-OwnWork provides global helpers for accessing application configuration, environment values, and application paths.
+ OwnWork provides global helpers for application paths, environment values, views, components, and transpiled templates.
 
-## `approot()`
+ ## `approot()`
 
-Returns the application root directory.
+ Returns the application root directory.
 
-```php
+```
 $root = approot();
-````
+```
 
- Use it when constructing paths inside the application:
+ Use it to construct paths relative to the project root:
 
 ```
 $viewPath = approot() . "/resources/views/";
-```
-
- For example:
-
-```
 $storagePath = approot() . "/storage/";
 ```
 
  ## `env()`
 
- Reads an environment variable.
+ Reads an environment variable:
 
 ```
 $value = env("APP_NAME");
 ```
 
- Example:
+ For example:
 
 ```
 $appName = env("APP_NAME");
@@ -51,15 +46,17 @@ env("APP_NAME");
 env("APP_DEBUG");
 ```
 
+ See Environment Configuration.
+
  ## `view()`
 
- The `view()` helper renders an application view.
+ Renders an application view:
 
 ```
 return view("home.temp.php");
 ```
 
- A view can receive data:
+ Data can be passed as the second argument:
 
 ```
 return view("users/index.temp.php", [
@@ -67,7 +64,7 @@ return view("users/index.temp.php", [
 ]);
 ```
 
- The view path is relative to:
+ View paths are resolved from:
 
 ```
 resources/views/
@@ -75,21 +72,23 @@ resources/views/
 
  ## `comp()`
 
- The `comp()` helper is used by the `@comp()` template directive.
+ The `comp()` helper renders a component.
 
- In a template:
-
-```
-@comp("button")
-```
-
- is transpiled into a call to:
+ It is also the helper used by the `@comp()` template directive.
 
 ```
 comp("button");
 ```
 
- Arguments can be passed to the component:
+ A component can receive arguments:
+
+```
+comp("button", [
+    "text" => "Save"
+]);
+```
+
+ In a template:
 
 ```
 @comp("button", [
@@ -97,51 +96,27 @@ comp("button");
 ])
 ```
 
+ See Components.
+
  ## `getTempTranspiled()`
 
- OwnWork's template system uses:
+ `getTempTranspiled()` resolves a transpiled template for the template include mechanism.
 
-```
-getTempTranspiled(...)
-```
+ The `@@includeTemp()` directive uses this helper internally.
 
- for transpiled-template includes created by:
-
-```
-@@includeTemp(...)
-```
-
- Example:
+ For example:
 
 ```
 @@includeTemp("header.temp.php")
 ```
 
- The template parser converts this directive into an include using `getTempTranspiled()`.
+ is converted by the templating system into an include using `getTempTranspiled()`.
 
- ## `approot()` in Paths
+ See View Transpilation.
 
- When accessing files from the application root:
+ ## Helpers in Controllers
 
-```
-approot() . "/config/app.php"
-```
-
- When accessing application views:
-
-```
-approot() . "/resources/views/home.temp.php"
-```
-
- When accessing compiled views:
-
-```
-approot() . "/storage/views/"
-```
-
- ## Using Helpers in Controllers
-
- Helpers can be used directly from controllers:
+ Helpers can be called directly from controllers:
 
 ```
 public function index(
@@ -156,9 +131,9 @@ public function index(
 }
 ```
 
- ## Using Helpers in Views
+ ## Helpers in Views
 
- Helpers can also be used from templates:
+ Helpers are also available inside templates:
 
 ```
 <h1>{{ env("APP_NAME") }}</h1>
@@ -174,12 +149,12 @@ $path = approot() . "/storage/";
 
  ## Quick Reference
 
-| Helper | Purpose |
+ | Helper | Purpose |
 | --- | --- |
 | `approot()` | Get the application root path |
 | `env("KEY")` | Read an environment value |
 | `view("file")` | Render a view |
 | `comp(...)` | Render a component |
-| `getTempTranspiled(...)` | Resolve a transpiled template include |
+| `getTempTranspiled(...)` | Resolve a transpiled template |
 
-> next: `errors/error-handling.md`
+> `errors/error-handling.md`

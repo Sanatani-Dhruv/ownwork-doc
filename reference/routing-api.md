@@ -1,131 +1,208 @@
 # Routing API
 
-OwnWork routing is built around route definitions that connect HTTP methods and URL paths to controller actions.
+ OwnWork routing is provided through Coretex's `Route` class and is configured from:
 
-## Route Definition
+```
+bundle/Routes.php
+```
 
-A route is defined by:
+ The application's `Kernel` creates the route object and loads `bundle/Routes.php` before resolving the matching handler.
 
-- HTTP method
-- URL path
-- controller
-- controller method
+ ## Route Definition
 
-A typical route looks like:
+ Routes are registered on the `$route` instance:
 
 ```php
-Route::get("/", [HomeController::class, "index"]);
-````
-
- The controller method is called when the matching request is received.
-
- ## HTTP Methods
-
- Routes can be registered for common HTTP methods:
-
-```
-Route::get("/users", [UserController::class, "index"]);
-Route::post("/users", [UserController::class, "store"]);
-Route::put("/users", [UserController::class, "update"]);
-Route::patch("/users", [UserController::class, "update"]);
-Route::delete("/users", [UserController::class, "destroy"]);
+<?php
+$route->get("/", "main.temp.php");
 ```
 
- Use the method that matches the intended HTTP operation.
+ A controller action can also be used:
+
+```php
+<?php
+$route->get("/users", [
+    UserController::class,
+    "index"
+]);
+```
+
+ The second argument is the route handler.
 
  ## GET Routes
 
- Use `get()` for GET requests:
+ Register a GET route with:
 
+```php
+<?php
+$route->get("/users", [
+    UserController::class,
+    "index"
+]);
 ```
-Route::get("/users", [UserController::class, "index"]);
+
+ GET routes can also directly resolve to a view:
+
+```php
+<?php
+$route->get("/", "main.temp.php");
 ```
 
  ## POST Routes
 
- Use `post()` for POST requests:
+ Register a POST route with:
 
-```
-Route::post("/users", [UserController::class, "store"]);
+```php
+<?php
+$route->post("/users", [
+    UserController::class,
+    "store"
+]);
 ```
 
  ## PUT Routes
 
- Use `put()` for PUT requests:
-
-```
-Route::put("/users/{id}", [UserController::class, "update"]);
+```php
+<?php
+$route->put("/users/{id}", [
+    UserController::class,
+    "update"
+]);
 ```
 
  ## PATCH Routes
 
- Use `patch()` for PATCH requests:
-
-```
-Route::patch("/users/{id}", [UserController::class, "update"]);
+```php
+<?php
+$route->patch("/users/{id}", [
+    UserController::class,
+    "update"
+]);
 ```
 
  ## DELETE Routes
 
- Use `delete()` for DELETE requests:
-
-```
-Route::delete("/users/{id}", [UserController::class, "destroy"]);
+```php
+<?php
+$route->delete("/users/{id}", [
+    UserController::class,
+    "destroy"
+]);
 ```
 
  ## Route Paths
 
- A route path starts with `/`:
+ Route paths begin with `/`:
 
-```
-Route::get("/about", [PageController::class, "about"]);
+```php
+<?php
+$route->get("/about", [
+    PageController::class,
+    "about"
+]);
 ```
 
- The path is matched against the incoming request URL.
+ The route is matched against the incoming request path.
 
  ## Dynamic Parameters
 
- Route parameters can be placed inside `{}`:
+ Dynamic parameters use `{name}` syntax:
 
-```
-Route::get("/users/{id}", [UserController::class, "show"]);
-```
-
- For:
-
-```
-/users/25
+```php
+<?php
+$route->get("/users/{id}", [
+    UserController::class,
+    "show"
+]);
 ```
 
- the value of `id` is:
+ A request such as:
 
 ```
-25
+/users/12
 ```
 
- See Dynamic Parameters.
+ provides the dynamic parameter:
+
+```
+id = 12
+```
+
+ OwnWork stores the matched parameters on the request as:
+
+```
+$request->getAttribute("dynamicParams");
+```
+
+ For example:
+
+```php
+<?php
+$params = $request->getAttribute(
+    "dynamicParams"
+);
+
+$id = $params["id"];
+```
+
+ See `routing/dynamic-parameters.md`.
+
+ ## Multiple Dynamic Parameters
+
+ A route can contain multiple parameters:
+
+```php
+<?php
+$route->get("/users/{id}/{name}", [
+    UserController::class,
+    "show"
+]);
+```
+
+ For example:
+
+```
+/users/12/someone
+```
+
+ produces parameters equivalent to:
+
+```php
+<?php
+[
+    "id" => "12",
+    "name" => "someone"
+]
+```
 
  ## Controller Actions
 
- Routes point to controller methods:
+ Controller handlers are normally represented as:
 
-```
-Route::get("/users", [UserController::class, "index"]);
-```
-
- Here:
-
-```
-UserController
-      ↓
-    index()
+```php
+<?php
+[
+    UserController::class,
+    "index"
+]
 ```
 
- is the action executed for the route.
+ For example:
 
- A controller can return a view:
-
+```php
+<?php
+$route->get("/users", [
+    UserController::class,
+    "index"
+]);
 ```
+
+ The route resolver receives the handler and invokes the controller action with the application's request and response objects.
+
+ A controller can therefore use:
+
+```php
+<?php
 public function index(
     Request $request,
     Response $response
@@ -134,140 +211,189 @@ public function index(
 }
 ```
 
- ## Request and Response
+ ## Direct View Handlers
 
- Controller actions can receive the request and response objects:
-
-```
-public function index(
-    Request $request,
-    Response $response
-) {
-    // ...
-}
-```
-
- The request contains information about the incoming HTTP request.
-
- The response is used when building an HTTP response.
-
- See:
-
- - Request API
-- Response API
-
- ## Route Parameters in Controllers
-
- A route such as:
+ A route can use a view name as its handler:
 
 ```
-Route::get("/users/{id}", [UserController::class, "show"]);
+$route->get("/", "main.temp.php");
 ```
 
- can be handled by:
-
-```
-public function show(
-    Request $request,
-    Response $response
-) {
-    $id = $request->param("id");
-
-    // ...
-}
-```
+ This is useful for simple routes that do not require controller logic.
 
  ## Middleware
 
- Middleware can be attached to routes when authentication, authorization, request processing, or other pre-controller behavior is required.
+ Routes can carry middleware handlers.
 
- Example:
+ The route result contains middleware information, and OwnWork's `Kernel` executes the middleware chain before resolving the final route handler.
+
+ A route can therefore be used with middleware where request processing must happen before the controller or other handler.
+
+ See `routing/middleware.md`.
+
+ ## Route Resolution
+
+ When a request is handled, OwnWork:
 
 ```
-Route::get(
-    "/admin",
-    [AdminController::class, "index"],
-    [AuthMiddleware::class]
-);
+Request
+    ↓
+Route registration
+    ↓
+Route matching
+    ↓
+Dynamic parameters
+    ↓
+Middleware
+    ↓
+Route handler
+    ↓
+Response
 ```
 
- See Middleware.
+ The `Kernel` calls:
 
- ## Route Files
+```
+$result = $route->end();
+```
 
- Keep route definitions in the application's routing configuration.
+ to obtain the matched route information.
+
+ The resulting information includes the route handler and matched parameters.
+
+ ## Route Request Attributes
+
+ OwnWork places routing information on the request.
+
+ The current route is available as:
+
+```php
+<?php
+$request->getAttribute("currentRoute");
+```
+
+ The registered route information is available as:
+
+```php
+<?php
+$request->getAttribute("routesArray");
+```
+
+ Dynamic parameters are available as:
+
+```php
+<?php
+$request->getAttribute("dynamicParams");
+```
+
+ These attributes are populated by the application kernel after route matching.
+
+ ## Missing Routes
+
+ If no route handler is available after matching, OwnWork throws:
+
+```
+PageNotFoundException
+```
+
+ The kernel catches this exception and produces a 404 response through the framework pager.
+
+ Conceptually:
+
+```
+No matching handler
+        ↓
+PageNotFoundException
+        ↓
+HTTP 404
+        ↓
+OwnWork not-found page
+```
+
+ ## Route File
+
+ The application's route definitions belong in:
+
+```
+bundle/Routes.php
+```
 
  A typical route file can contain:
 
-```
-Route::get("/", [HomeController::class, "index"]);
+```php
+<?php
+<?php
 
-Route::get("/users", [UserController::class, "index"]);
-Route::get("/users/{id}", [UserController::class, "show"]);
+namespace Bundle;
 
-Route::post("/users", [UserController::class, "store"]);
-```
+use App\Controller\UserController;
 
- ## Route Organization
+$route->get("/", "main.temp.php");
 
- Routes can be grouped by application feature:
+$route->get("/users", [
+    UserController::class,
+    "index"
+]);
 
-```
-Route::get("/users", [UserController::class, "index"]);
-Route::get("/users/{id}", [UserController::class, "show"]);
+$route->get("/users/{id}", [
+    UserController::class,
+    "show"
+]);
 
-Route::get("/posts", [PostController::class, "index"]);
-Route::get("/posts/{id}", [PostController::class, "show"]);
-```
-
- ## Route Matching
-
- When a request arrives, the router checks the registered routes against:
-
- 1. HTTP method
-2. requested path
-3. dynamic route parameters
-
- For example:
-
-```
-GET /users/25
+$route->post("/users", [
+    UserController::class,
+    "store"
+]);
 ```
 
- can match:
-
-```
-Route::get("/users/{id}", [UserController::class, "show"]);
-```
-
- with:
-
-```
-id = 25
-```
+ The file is loaded by `App\Http\Kernel` during request handling.
 
  ## Route API Summary
 
  | API | Purpose |
 | --- | --- |
-| `Route::get()` | Register a GET route |
-| `Route::post()` | Register a POST route |
-| `Route::put()` | Register a PUT route |
-| `Route::patch()` | Register a PATCH route |
-| `Route::delete()` | Register a DELETE route |
+| `$route->get()` | Register a GET route |
+| `$route->post()` | Register a POST route |
+| `$route->put()` | Register a PUT route |
+| `$route->patch()` | Register a PATCH route |
+| `$route->delete()` | Register a DELETE route |
+| `$route->end()` | Resolve registered routes for the current request |
 
 ## Example
 
+```php
+<?php
+$route->get("/", "main.temp.php");
+
+$route->get("/users", [
+    UserController::class,
+    "index"
+]);
+
+$route->get("/users/{id}", [
+    UserController::class,
+    "show"
+]);
+
+$route->post("/users", [
+    UserController::class,
+    "store"
+]);
+
+$route->put("/users/{id}", [
+    UserController::class,
+    "update"
+]);
+
+$route->patch("/users/{id}", [
+    UserController::class,
+    "update"
+]);
+
+$route->delete("/users/{id}", [
+    UserController::class,
+    "destroy"
+]);
 ```
-Route::get("/", [HomeController::class, "index"]);
 
-Route::get("/users", [UserController::class, "index"]);
-Route::get("/users/{id}", [UserController::class, "show"]);
-
-Route::post("/users", [UserController::class, "store"]);
-
-Route::put("/users/{id}", [UserController::class, "update"]);
-Route::delete("/users/{id}", [UserController::class, "destroy"]);
-```
-
-> next: `reference/request-api.md`
+ >  `reference/request-api.md`

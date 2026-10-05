@@ -1,65 +1,241 @@
-# Views
+ # Views
 
-Views are the presentation layer of an OwnWork application.
+ OwnWork provides a view system for rendering application-facing HTML.
 
-Application views are stored under:
+ Application views are stored under:
 
-```text
+```
 resources/views/
-````
+```
 
- OwnWork provides a view system through Coretex. The framework uses its own templating and view-transpilation pipeline rather than requiring a third-party template engine. The package describes this as a Blade-like templating engine and identifies `.temp.php` files as its template format.  Packagist
+ Views can be ordinary PHP files or `.temp.php` template files processed by OwnWork's template system.
+
+ The main helper for rendering a view is:
+
+```
+view()
+```
 
  ## View Directory
 
- The default application structure contains:
+ Application views belong under:
 
 ```
-resources/
-└── views/
+resources/views/
 ```
-
- Application templates are placed inside this directory.
 
  For example:
 
 ```
-resources/
-└── views/
-    ├── home.temp.php
-    ├── users.temp.php
-    └── users/
-        ├── index.temp.php
-        └── show.temp.php
+resources/views/
+├── home.php
+├── users.php
+├── users.temp.php
+└── profile.temp.php
 ```
 
- The exact organization of view files is up to the application.
+ The `resources/views/` directory is separate from:
+
+```
+resources/appviews/
+```
+
+ `resources/appviews/` contains views used by OwnWork/Coretex itself, particularly framework error pages.
+
+ Application templates should normally be placed under `resources/views/`.
 
  ## Creating a View
 
- Use the OwnWork worker to generate a view:
+ A view can be created as a normal PHP file:
 
 ```
-php worker make view home
+resources/views/home.php
 ```
 
- The generated view is created under:
+ or as a template:
+
+```
+resources/views/home.temp.php
+```
+
+ For example:
+
+```
+<h1>Hello World</h1>
+```
+
+ The view can then be rendered from a controller or route.
+
+ ## Rendering a View
+
+ Use the global `view()` helper:
+
+```
+return view("home.php");
+```
+
+ For a template view:
+
+```
+return view("home.temp.php");
+```
+
+ The view name identifies the file under:
 
 ```
 resources/views/
 ```
 
- The worker uses the framework's view template located under:
+ For example:
 
 ```
-resources/template/View.php
+return view("users.temp.php");
 ```
 
- This template is used as the starting point for generated application views.  Packagist
+ resolves to:
 
- ## `.temp.php` Files
+```
+resources/views/users.temp.php
+```
 
- OwnWork templates use the `.temp.php` extension.
+ ## Passing Data to a View
+
+ The `view()` helper accepts an optional data array.
+
+ For example:
+
+```
+return view("users.temp.php", [
+    "title" => "Users"
+]);
+```
+
+ The supplied values are made available to the view when it is rendered.
+
+ A template can then use the value:
+
+```
+<h1>{{ $title }}</h1>
+```
+
+ The exact template syntax is provided by the OwnWork/Coretex template system.
+
+ ## View Data
+
+ Multiple values can be passed to a view:
+
+```
+return view("profile.temp.php", [
+    "name" => "Dhruv",
+    "email" => "user@example.com"
+]);
+```
+
+ The template can access the supplied variables:
+
+```
+<h1>{{ $name }}</h1>
+
+<p>{{ $email }}</p>
+```
+
+ The data array provides the boundary between application code and the rendered view.
+
+ ## Views from Controllers
+
+ Controllers commonly render views as their final operation.
+
+ For example:
+
+```php
+<?php
+
+namespace App\Controller;
+
+use Dhruv125\Coretex\Support\Request;
+use Dhruv125\Coretex\Support\Response;
+
+class UserController
+{
+    public function index(
+        Request $request,
+        Response $response
+    ) {
+        return view("users.temp.php", [
+            "title" => "Users"
+        ]);
+    }
+}
+```
+
+ The route can point to the controller:
+
+```
+$route->get("/users", [
+    UserController::class,
+    "index"
+]);
+```
+
+ The request flow becomes:
+
+```
+HTTP Request
+     ↓
+Route
+     ↓
+Controller
+     ↓
+view()
+     ↓
+resources/views/users.temp.php
+     ↓
+Rendered HTML
+     ↓
+HTTP Response
+```
+
+ ## Views Directly from Routes
+
+ A view can also be used directly as a route handler.
+
+ For example:
+
+```
+$route->get("/", "home.temp.php");
+```
+
+ Here, the string handler identifies a view.
+
+ The route resolver treats the string as a view handler rather than requiring a controller.
+
+ This is useful for simple pages that do not require application logic.
+
+ ## PHP Views
+
+ OwnWork supports ordinary PHP views.
+
+ For example:
+
+```
+resources/views/home.php
+```
+
+ with:
+
+```
+<h1>
+    <?php echo $title; ?>
+</h1>
+```
+
+ The PHP view can use normal PHP syntax.
+
+ The view system therefore does not require every application page to use the `.temp.php` template format.
+
+ ## Template Views
+
+ OwnWork also supports `.temp.php` files.
 
  For example:
 
@@ -67,604 +243,432 @@ resources/template/View.php
 resources/views/home.temp.php
 ```
 
- A template can contain HTML:
-
-```
-<h1>Hello World</h1>
-```
-
- PHP-compatible template expressions and OwnWork's templating syntax can be used where supported by the templater.
-
- ## Rendering a View
-
- A view can be rendered using the global `view()` helper:
-
-```
-return view("home.temp.php");
-```
-
- A controller can therefore render a view like this:
-
-```php
-<?php
-
-namespace App\Controller;
-
-use Dhruv125\Coretex\Support\Request;
-use Dhruv125\Coretex\Support\Response;
-
-class HomeController
-{
-    public function index(
-        Request $request,
-        Response $response
-    ) {
-        return view("home.temp.php");
-    }
-}
-```
-
- The view helper locates the requested template in the application's views directory.
-
- ## Passing Data to a View
-
- The `view()` helper accepts data for the template.
-
- For example:
-
-```
-return view("home.temp.php", [
-    "title" => "Home"
-]);
-```
-
- The template can access the supplied value:
+ A template can use OwnWork's template syntax:
 
 ```
 <h1>{{ $title }}</h1>
 ```
 
- A larger data set can be passed in the same way:
+ Template files are processed by the template system before their resulting PHP representation is executed.
 
-```
-return view("users/index.temp.php", [
-    "title" => "Users",
-    "users" => $users
-]);
-```
+ This provides a template-oriented syntax while still producing PHP-based view output.
 
- ## View Data
+ ## Template Compilation
 
- View data is normally supplied by the controller.
+ Template views are compiled before execution.
 
- The common flow is:
-
-```
-Controller
-    ↓
-view()
-    ↓
-Template data
-    ↓
-Template
-    ↓
-Rendered output
-```
-
- For example:
-
-```
-public function index(
-    Request $request,
-    Response $response
-) {
-    $users = [
-        "Alice",
-        "Bob"
-    ];
-
-    return view("users/index.temp.php", [
-        "users" => $users
-    ]);
-}
-```
-
- The template can then render the supplied data.
-
- ## Template Example
-
- Controller:
-
-```
-public function index(
-    Request $request,
-    Response $response
-) {
-    return view("users/index.temp.php", [
-        "title" => "Users",
-        "users" => [
-            "Alice",
-            "Bob",
-            "Charlie"
-        ]
-    ]);
-}
-```
-
- Template:
-
-```
-<h1>{{ $title }}</h1>
-
-<ul>
-    @foreach ($users as $user)
-        <li>{{ $user }}</li>
-    @endforeach
-</ul>
-```
-
- The template syntax is processed by OwnWork's templating engine.
-
- ## View Compilation
-
- OwnWork does not render every template directly on every request.
-
- The framework includes a view-transpilation process.
-
- Run the transpiler with:
-
-```
-php worker transpile
-```
-
- The package also exposes the equivalent Composer script:
-
-```
-composer run transpile
-```
-
- The transpiler converts application templates into their compiled representation.  Packagist
-
- ## Compiled Views
-
- Compiled view information is maintained under:
+ The generated representations are stored under:
 
 ```
 storage/views/
 ```
 
- The application also contains:
+ The view system also maintains:
 
 ```
-resources/views.json
+storage/views.json
 ```
 
- which maintains the mapping between template files and their compiled forms.  Packagist
+ which maps template sources to their compiled representations.
 
  Conceptually:
 
 ```
-resources/views/
-       │
-       │ .temp.php
-       ▼
-   Transpiler
-       │
-       ▼
-storage/views/
-       │
-       ▼
-    Renderer
-       │
-       ▼
-  HTTP Response
+resources/views/home.temp.php
+             │
+             ▼
+       Template system
+             │
+             ▼
+       storage/views/
+             │
+             ▼
+        Rendered output
 ```
 
- ## Running the Transpiler
+ Generated view files should generally not be edited manually.
 
- During development, run:
+ ## View Cache
 
-```
-php worker transpile
-```
+ Compiled template output is generated data.
 
- in a separate terminal while the development server is running:
+ When application templates change, the generated representation may need to be regenerated.
 
-```
-php worker serve
-```
-
- The package README also provides:
+ OwnWork provides a worker command for clearing compiled view data:
 
 ```
-composer run dev
+php worker clear:viewcache
 ```
 
- for starting the development server and:
+ This removes the generated view cache so that templates can be compiled again.
 
-```
-composer run transpile
-```
+ ## View Paths
 
- for the template transpiler.  Packagist
-
- If Node.js is installed, the project also provides an npm development workflow:
-
-```
-npm run dev
-```
-
- which can run the development tooling together.  Packagist
-
- ## View Path
-
- Application views belong in:
+ View names are resolved relative to:
 
 ```
 resources/views/
 ```
 
- Do not place normal application views in:
-
-```
-resources/appviews/
-```
-
- The `appviews` directory contains framework-provided views used by OwnWork itself, including error-related templates.  Packagist
-
- The distinction is:
-
-```
-resources/
-├── appviews/    # OwnWork/framework views
-└── views/       # Application views
-```
-
- ## Framework Views
-
- OwnWork contains internal views for framework-level pages.
-
- The package structure includes:
-
-```
-resources/appviews/
-├── error_layout.php
-├── no-info-error.php
-├── stackTrace-block.php
-├── script/
-│   └── script.js
-└── styles/
-    └── index.css
-```
-
- These are used by the framework's error and exception presentation system.  Packagist
-
- Application developers normally should not use `resources/appviews/` for ordinary application pages.
-
- ## Views and Controllers
-
- Controllers decide which view should be rendered.
-
  For example:
 
 ```
-class UserController
-{
-    public function index(
-        Request $request,
-        Response $response
-    ) {
-        return view("users/index.temp.php", [
-            "title" => "Users"
-        ]);
-    }
-}
+view("home.php");
 ```
 
- The corresponding structure is:
+ refers to:
 
 ```
-app/
-└── Controller/
-    └── UserController.php
-
-resources/
-└── views/
-    └── users/
-        └── index.temp.php
+resources/views/home.php
 ```
 
- This provides a straightforward relationship between application controllers and presentation templates.
-
- ## Views and Models
-
- Views should normally receive prepared application data rather than performing persistence operations themselves.
-
- A typical MVC flow is:
+ and:
 
 ```
-Request
-   ↓
-Controller
-   ↓
-Service
-   ↓
-Model
-   ↓
-Data
-   ↓
-Controller
-   ↓
-View
-   ↓
-Response
+view("users/profile.temp.php");
 ```
 
- For example:
+ refers to:
 
 ```
-$users = $userService->findAll();
-
-return view("users/index.temp.php", [
-    "users" => $users
-]);
+resources/views/users/profile.temp.php
 ```
 
- The template is then responsible for presenting `$users`.
-
- ## Views and Services
-
- A service can prepare application data before the controller passes it to the view:
-
-```
-$users = $userService->listUsers();
-
-return view("users/index.temp.php", [
-    "users" => $users
-]);
-```
-
- This keeps application operations outside the presentation layer.
-
- ## View File Naming
-
- OwnWork templates use the `.temp.php` suffix.
-
- Examples:
-
-```
-home.temp.php
-login.temp.php
-users.temp.php
-users/index.temp.php
-users/show.temp.php
-```
-
- The naming convention is primarily for the OwnWork templating/transpilation system.
-
- ## Nested View Directories
-
- Views can be organized into directories:
+ Applications can therefore organize views into directories:
 
 ```
 resources/views/
 ├── home.temp.php
 ├── users/
 │   ├── index.temp.php
-│   └── show.temp.php
+│   ├── profile.temp.php
+│   └── edit.temp.php
 └── admin/
     ├── dashboard.temp.php
     └── users.temp.php
 ```
 
- Render a nested template by providing its relative view path:
+ ## View Organization
+
+ There is no required application-wide naming convention for views.
+
+ A project can organize templates according to its needs.
+
+ For example:
 
 ```
-return view("users/index.temp.php");
+resources/views/
+├── layouts/
+├── users/
+├── products/
+├── orders/
+└── dashboard/
 ```
 
- This allows larger applications to organize templates by feature.
-
- ## Views and Static Assets
-
- Static files should be placed under:
+ The important distinction is that application views belong under:
 
 ```
-public/
+resources/views/
 ```
 
- The package structure identifies `public/` as the directory exposed to users and recommends placing static assets there.  Packagist
-
- A typical project can therefore look like:
+ while framework-owned views belong under:
 
 ```
-public/
-├── index.php
-├── styles/
-└── build/
-
-resources/
-└── views/
-    └── home.temp.php
+resources/appviews/
 ```
 
- Views generate application markup while `public/` contains files directly served to the client.
+ ## Views and Components
 
- ## Tailwind CSS
+ Reusable pieces of application markup can be separated from complete page views.
 
- A default OwnWork project includes Tailwind-related resources:
-
-```
-resources/css/tailwind.css
-```
-
- and compiled CSS under:
+ OwnWork provides the `comp()` helper for components:
 
 ```
-public/styles/
+comp("button.php");
 ```
 
- The package's default structure includes:
+ Components are covered separately in:
 
 ```
-resources/css/tailwind.css
-public/styles/tailwind.default.css
+views/components.md
 ```
 
- as part of its frontend setup.  Packagist
-
- This styling system is independent from the view renderer.
-
- ## View Errors
-
- The Coretex layer provides exceptions related to view processing, including:
+ A typical relationship is:
 
 ```
-ViewNotFoundException
-ViewJsonNotFoundException
+View
+ ├── Layout
+ ├── Component
+ └── Component
 ```
 
- A missing or invalid view can therefore result in framework-level error handling.
+ Views represent pages or larger rendered sections, while components can provide reusable pieces of markup.
 
- See Error Handling.
+ ## Views and Controllers
 
- ## View Compilation Workflow
+ A controller should normally decide which view should be rendered based on the application operation.
 
- A complete development workflow can be represented as:
-
-```
-Create template
-      ↓
-resources/views/*.temp.php
-      ↓
-Run transpiler
-      ↓
-Compiled view
-      ↓
-Controller calls view()
-      ↓
-View renderer
-      ↓
-HTML output
-      ↓
-HTTP response
-```
-
- During development, the transpiler can be run continuously alongside the development server.
-
- ## Example: Complete View
-
- Project:
+ For example:
 
 ```
-app/
-└── Controller/
-    └── HomeController.php
+public function profile(
+    Request $request,
+    Response $response
+) {
+    $params = $request->getAttribute(
+        "dynamicParams"
+    );
 
-resources/
-└── views/
-    └── home.temp.php
-```
-
- Controller:
-
-```php
-<?php
-
-namespace App\Controller;
-
-use Dhruv125\Coretex\Support\Request;
-use Dhruv125\Coretex\Support\Response;
-
-class HomeController
-{
-    public function index(
-        Request $request,
-        Response $response
-    ) {
-        return view("home.temp.php", [
-            "title" => "OwnWork",
-            "message" => "Welcome!"
-        ]);
-    }
+    return view("users/profile.temp.php", [
+        "id" => $params["id"]
+    ]);
 }
 ```
 
- Template:
+ The controller handles HTTP and application coordination.
+
+ The view handles presentation.
+
+ A simple separation is:
 
 ```
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ $title }}</title>
-</head>
-<body>
-    <h1>{{ $title }}</h1>
-
-    <p>{{ $message }}</p>
-</body>
-</html>
+Controller
+    ↓
+Application data
+    ↓
+View
+    ↓
+HTML
 ```
 
- Route:
+ ## Views and Services
+
+ Services can prepare application data before a controller passes it to a view.
+
+ For example:
 
 ```
-$route->get("/", [
-    HomeController::class,
-    "index"
+Controller
+    ↓
+UserService
+    ↓
+User data
+    ↓
+View
+```
+
+ The view should generally focus on rendering the data rather than performing persistence operations.
+
+ ## Views and Models
+
+ Views should not normally be responsible for database access.
+
+ Instead:
+
+```
+Controller
+    ↓
+Service / Model
+    ↓
+Data
+    ↓
+View
+```
+
+ For example:
+
+```
+$user = $service->findUser($id);
+
+return view("users/profile.temp.php", [
+    "user" => $user
 ]);
 ```
 
- The resulting request flow is:
+ The template can then render the supplied data.
+
+ ## View Errors
+
+ If a requested view does not exist, the view system can raise a framework view exception.
+
+ For example:
 
 ```
-GET /
-  ↓
-Route
-  ↓
-HomeController::index()
-  ↓
-view("home.temp.php", ...)
-  ↓
-Template transpilation/rendering
-  ↓
-HTML
-  ↓
-Client
+return view("missing.temp.php");
 ```
 
- ## View API Boundary
+ If the corresponding file cannot be resolved, Coretex's view/error handling processes the failure.
 
- OwnWork's view functionality is implemented through Coretex's viewer and templater components.
+ View errors are therefore part of the application's normal error-handling pipeline.
 
- The package structure identifies:
+ See:
 
 ```
-Coretex/
-├── Templater/
-│   └── Template.php
-└── Viewer/
-    └── View.php
+errors/error-handling.md
 ```
 
- The `Template` component handles `.temp.php` template processing, while the `View` component handles view-related operations such as locating and displaying compiled views.  Packagist
+ ## Application Views vs Framework Views
 
- OwnWork integrates these components into the application lifecycle.
+ OwnWork separates application views from framework views.
 
- ## Quick Reference
+ ### Application views
 
-| Task | Command / API |
-| --- | --- |
-| Generate a view | `php worker make view <name>` |
-| Application view directory | `resources/views/` |
-| Template extension | `.temp.php` |
-| Render a view | `view("file.temp.php")` |
-| Pass view data | `view("file.temp.php", [...])` |
-| Transpile views | `php worker transpile` |
-| Compiled view directory | `storage/views/` |
-| View mapping | `resources/views.json` |
-| Framework views | `resources/appviews/` |
+```
+resources/views/
+```
 
-For template syntax and directives, see Templating.
+ These are controlled by the application developer.
 
-> next: `views/templating.md`
+ ### Framework views
+
+```
+resources/appviews/
+```
+
+ These are used by OwnWork/Coretex, including error-related presentation.
+
+ Applications should normally create their own views under:
+
+```
+resources/views/
+```
+
+ rather than modifying framework views.
+
+ ## View Generation
+
+ OwnWork's worker includes view generation support.
+
+ The worker uses templates under:
+
+```
+resources/template/
+```
+
+ when generating application resources.
+
+ Generated application views belong under:
+
+```
+resources/views/
+```
+
+ The exact generated content depends on the worker template and the command being used.
+
+ ## Complete Example
+
+ A route:
+
+```
+$route->get("/users/{id}", [
+    UserController::class,
+    "show"
+]);
+```
+
+ can be handled by:
+
+```
+public function show(
+    Request $request,
+    Response $response
+) {
+    $params = $request->getAttribute(
+        "dynamicParams"
+    );
+
+    $id = $params["id"];
+
+    return view("users/profile.temp.php", [
+        "id" => $id
+    ]);
+}
+```
+
+ The corresponding view:
+
+```
+resources/views/users/profile.temp.php
+```
+
+ can contain:
+
+```
+<h1>User Profile</h1>
+
+<p>User ID: {{ $id }}</p>
+```
+
+ The resulting flow is:
+
+```
+GET /users/42
+      ↓
+Route matching
+      ↓
+UserController::show()
+      ↓
+dynamicParams
+      ↓
+view("users/profile.temp.php")
+      ↓
+Template compilation
+      ↓
+Rendered HTML
+      ↓
+HTTP Response
+```
+
+ ## View Responsibilities
+
+ Views are primarily responsible for presentation.
+
+ Typical view responsibilities include:
+
+ - rendering HTML
+- displaying application data
+- using template syntax
+- including reusable components
+- presenting application state to the user
+
+ Views should generally not be responsible for:
+
+ - route registration
+- request lifecycle management
+- database persistence
+- authentication decisions
+- application-wide business operations
+
+ Those responsibilities belong elsewhere in the application.
+
+ ## View Workflow
+
+ A typical OwnWork view workflow is:
+
+```
+Create view
+    ↓
+resources/views/
+    ↓
+Create PHP or .temp.php template
+    ↓
+Controller or route calls view()
+    ↓
+Template processing
+    ↓
+Compiled representation
+    ↓
+Rendered output
+    ↓
+HTTP response
+```
+
+ The next view-specific topics cover the individual parts of this system:
+
+```
+views/templating.md
+views/components.md
+views/transpilation.md
+```
+
+> `views/templating.md`

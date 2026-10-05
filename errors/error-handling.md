@@ -1,98 +1,80 @@
 # Error Handling
 
-OwnWork uses PHP exceptions and framework-specific exceptions to report errors.
+ OwnWork uses PHP exceptions together with Coretex exceptions and a global error handler for application errors.
 
-Errors can occur during application startup, routing, request handling, view rendering, or other application operations.
+ Errors may occur during application startup, routing, request handling, view rendering, or application code.
 
-## PHP Exceptions
+ ## Global Error Handling
 
-OwnWork uses standard PHP exceptions as well as exceptions provided by the framework and its dependencies.
+ OwnWork uses Coretex's global error handler for unhandled application errors.
 
-For example, the templating system throws an `ErrorException` when a requested template file does not exist:
-
-```php
-throw new \ErrorException("File '$filename' not found");
-````
-
- ## Handling Exceptions
-
- Application code can use normal PHP exception handling:
+ The handler is provided by:
 
 ```
-try {
-    // Application operation
-} catch (\Exception $error) {
-    // Handle the error
-}
+Dhruv125\Coretex\Handler\GlobalErrorHandler
 ```
 
- For example:
+ It is responsible for handling errors that are not handled by application code.
+
+ The Coretex package also provides a pager for displaying framework error pages:
+
+```
+Dhruv125\Coretex\Pager
+```
+
+ ## Error Handler Configuration
+
+ OwnWork's error handling behavior is controlled through environment variables.
+
+ ### `OWNWORK_ERROR_HANDLER`
+
+ Controls whether OwnWork's error handler is used.
+
+```
+OWNWORK_ERROR_HANDLER=true
+```
+
+ When enabled, unhandled errors are handled by OwnWork/Coretex.
+
+ When disabled, PHP handles errors normally.
+
+ If `OWNWORK_ERROR_HANDLER` is disabled, `DEV_ENV` does not control the OwnWork error page.
+
+ ### `DEV_ENV`
+
+ Controls the amount of information shown by the OwnWork error handler.
+
+ Development:
+
+```
+DEV_ENV=true
+OWNWORK_ERROR_HANDLER=true
+```
+
+ Development errors can include detailed information such as the exception location and source-code context.
+
+ Production:
+
+```
+DEV_ENV=false
+OWNWORK_ERROR_HANDLER=true
+```
+
+ Production errors use the default error presentation rather than exposing detailed debugging information.
+
+ ## PHP Exceptions
+
+ Application code can use normal PHP exceptions:
 
 ```
 try {
     $user = $service->find($id);
 } catch (\Exception $error) {
-    return view("errors/500.temp.php", [
-        "message" => $error->getMessage()
-    ]);
+    // Handle the exception.
 }
 ```
 
- ## View Errors
-
- The view system can throw errors when a requested view or view-related resource cannot be found.
-
- One of the view-related exceptions is:
-
-```
-ViewNotFoundException
-```
-
- Another is:
-
-```
-ViewJsonNotFoundException
-```
-
- These errors indicate that the requested view information could not be resolved.
-
- ## Missing Template
-
- When `Template::parse()` receives a file path that does not exist, it throws:
-
-```
-\ErrorException
-```
-
- Example:
-
-```
-$template->parse("/path/to/missing.temp.php");
-```
-
- results in an error indicating that the file was not found.
-
- ## Error Messages
-
- When handling an exception, the exception message can be accessed with:
-
-```
-$error->getMessage()
-```
-
- Example:
-
-```
-try {
-    // ...
-} catch (\Exception $error) {
-    echo $error->getMessage();
-}
-```
-
- ## HTTP Errors
-
- For HTTP requests, applications should return an appropriate response when an operation fails.
+ Exceptions can also be allowed to propagate to OwnWork's global error handler.
 
  For example:
 
@@ -105,19 +87,140 @@ public function show(
         $request->param("id")
     );
 
-    if (!$user) {
-        return view("errors/404.temp.php");
-    }
-
     return view("users/show.temp.php", [
         "user" => $user
     ]);
 }
 ```
 
- ## Error Views
+ If an unhandled exception occurs during the request, the global error handler can process it.
 
- Applications can create dedicated error views:
+ ## Coretex Exceptions
+
+ Coretex provides exceptions used by OwnWork and its application lifecycle.
+
+ Important framework exceptions include:
+
+```
+InternalErrorException
+PageNotFoundException
+ViewJsonNotFoundException
+ViewNotFoundException
+```
+
+ These are located in:
+
+```
+Dhruv125\Coretex\Exceptions\
+```
+
+ ## `PageNotFoundException`
+
+ Use `PageNotFoundException` when an application operation determines that a requested page does not exist.
+
+```
+throw new PageNotFoundException(
+    "Page Not Found"
+);
+```
+
+ For example:
+
+```
+$user = $service->find($id);
+
+if (!$user) {
+    throw new PageNotFoundException(
+        "Page Not Found"
+    );
+}
+```
+
+ This allows the request to enter OwnWork's normal not-found error handling instead of requiring every controller to construct its own 404 response.
+
+ ## View Exceptions
+
+ The view system provides exceptions for missing view resources.
+
+ ### `ViewNotFoundException`
+
+ Indicates that a requested view could not be resolved.
+
+```
+ViewNotFoundException
+```
+
+ ### `ViewJsonNotFoundException`
+
+ Indicates that required view mapping information could not be resolved.
+
+```
+ViewJsonNotFoundException
+```
+
+ These exceptions are part of Coretex:
+
+```
+Dhruv125\Coretex\Exceptions\
+```
+
+ ## Missing Templates
+
+ The templating system can throw a PHP `ErrorException` when a requested template file does not exist.
+
+ For example, attempting to parse a missing template:
+
+```
+$template->parse(
+    "/path/to/missing.temp.php"
+);
+```
+
+ can result in:
+
+```
+throw new \ErrorException(
+    "File '$filename' not found"
+);
+```
+
+ The resulting exception can then be handled by application code or by the global error handler.
+
+ ## Catching Exceptions
+
+ Applications can catch exceptions when custom handling is required:
+
+```
+try {
+    $result = $service->execute();
+} catch (\Exception $error) {
+    // Handle the failure.
+}
+```
+
+ The exception message is available through:
+
+```
+$error->getMessage();
+```
+
+ Specific exception classes can be handled separately:
+
+```
+try {
+    $result = $service->execute();
+} catch (ViewNotFoundException $error) {
+    // Handle missing view.
+} catch (\Exception $error) {
+    // Handle other failures.
+}
+```
+
+ ## Custom Error Pages
+
+ Applications can provide their own error views when custom handling is appropriate.
+
+ For example:
 
 ```
 resources/views/
@@ -126,72 +229,17 @@ resources/views/
     └── 500.temp.php
 ```
 
- Example:
-
-```
-<h1>404</h1>
-<p>Page not found.</p>
-```
-
- Then render the view when required:
+ A controller can explicitly render an error view:
 
 ```
 return view("errors/404.temp.php");
 ```
 
- ## Development Errors
-
- During development, keeping detailed error information available can help identify problems.
-
- A development environment can be configured through environment variables:
-
-```bash
-# Show Detailed Error Page with exact error with code snippet at which error occured.
-DEV_ENV=true
-# Use Ownwork error handler, if this is not true, php will throw errors by itself, and DEV_ENV variable will be ignored.
-OWNWORK_ERROR_HANDLER=true
-```
-
- Production environments should use appropriate production settings:
-
-```sh
-# Show Default Error Page, like page with only message as '500 Internal Server Error'.
-DEV_ENV=false
-# Use Ownwork error handler, if this is not true, php will throw errors by itself, and DEV_ENV variable will be ignored.
-OWNWORK_ERROR_HANDLER=true
-```
-
- ## Catching Specific Exceptions
-
- When a specific exception class is available, it can be caught separately:
-
-```
-try {
-    // ...
-} catch (ViewNotFoundException $error) {
-    return view("errors/404.temp.php");
-} catch (\Exception $error) {
-    return view("errors/500.temp.php");
-}
-```
-
- This allows different errors to receive different handling.
-
- ## Logging
-
- Errors that need investigation should be logged using the application's configured logging solution rather than displayed directly to users.
-
- Avoid exposing sensitive information such as:
-
- - passwords
-- API keys
-- database credentials
-- internal file paths
-- private application data
+ However, for framework-level not-found handling, applications can use `PageNotFoundException` and allow OwnWork's error handling system to process the exception.
 
  ## Error Handling Flow
 
- A typical application flow is:
+ A normal unhandled exception can follow this flow:
 
 ```
 Request
@@ -204,52 +252,117 @@ Application operation
    ↓
 Exception
    ↓
-Error handling
+GlobalErrorHandler
+   ↓
+Pager / Error Page
    ↓
 Response
 ```
 
- For a view-related error:
+ A not-found condition can follow:
+
+```
+Request
+   ↓
+Route / Controller
+   ↓
+PageNotFoundException
+   ↓
+GlobalErrorHandler
+   ↓
+Not Found response
+```
+
+ A missing template can follow:
 
 ```
 Controller
    ↓
 view()
    ↓
-View lookup / rendering
+View / Template
    ↓
-ViewNotFoundException
+ErrorException
    ↓
-Error handling
+GlobalErrorHandler
    ↓
 Error response
 ```
 
- ## Recommended Practice
+ ## Expected vs Unexpected Errors
 
- Keep normal application validation separate from unexpected exceptions.
+ Expected application conditions can be represented with appropriate framework exceptions.
 
- For expected conditions:
+ For example:
 
 ```
 if (!$user) {
-    // Let OwnWork show the 404 not found default page
-    throw new PageNotFoundException("Page Not Found");
-    // Or
-    // Custom not found page
+    throw new PageNotFoundException(
+        "Page Not Found"
+    );
 }
 ```
 
- For unexpected failures:
+ Unexpected failures can be allowed to propagate to the global handler:
+
+```
+$result = $service->execute();
+```
+
+ Or handled explicitly when the application needs custom behavior:
 
 ```
 try {
     $result = $service->execute();
 } catch (\Exception $error) {
-    // Log and handle the failure
+    // Custom application handling.
 }
 ```
 
- Use specific exception handling where the application needs different behavior for different failure types.
+ ## Error Information
 
-> next: `reference/routing-api.md`
+ During development, detailed error information is useful for debugging:
+
+```
+DEV_ENV=true
+OWNWORK_ERROR_HANDLER=true
+```
+
+ In production, avoid exposing internal implementation details:
+
+```
+DEV_ENV=false
+OWNWORK_ERROR_HANDLER=true
+```
+
+ Do not expose sensitive information such as:
+
+ - passwords
+- API keys
+- database credentials
+- private application data
+- unnecessary internal paths
+
+ ## Recommended Practice
+
+ Use framework exceptions when the application needs to communicate framework-level conditions:
+
+```
+throw new PageNotFoundException(
+    "Page Not Found"
+);
+```
+
+ Use normal PHP exceptions for application-specific failures:
+
+```
+throw new \InvalidArgumentException(
+    "User ID is required."
+);
+```
+
+ Allow unexpected exceptions to reach the global error handler unless the application has a specific reason to handle them locally.
+
+ This keeps controllers and services focused on application behavior while OwnWork/Coretex handles unhandled request errors centrally.
+
+ > next: `reference/routing-api.md`

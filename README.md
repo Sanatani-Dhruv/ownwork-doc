@@ -93,3 +93,13 @@ If you are starting a new OwnWork application, read these in order:
 7. [Templating](./views/templating.md)
 
 ### Feel free to point out mistakes
+---
+
+OwnWork is an open-source project, and contributions are always welcome.
+
+Found a bug, spotted something that could be improved, or have an idea for making OwnWork better? Feel free to open an issue or submit a pull request.
+
+Whether you're fixing a typo, improving the documentation, adding a feature, or helping others in the community, every contribution is appreciated.
+
+---
+OwnWork will not become heavy framework, it will be lightweight as it should be. Minimal.

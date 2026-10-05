@@ -1,185 +1,215 @@
 # Services
 
-Services are application-level classes used to keep reusable business operations separate from controllers.
-
-OwnWork provides a conventional service directory:
+Services are application-level classes stored under:
 
 ```text
 app/Service/
 ````
 
- The framework does not require a specific service base class, interface, or dependency-injection pattern.
+ OwnWork does not impose a service interface, base class, dependency-injection container, or persistence architecture.
+
+ A service is simply an application class that can be used to keep reusable operations outside controllers.
 
  ## Creating a Service
 
- Generate a service with:
+ Use the worker:
 
 ```
 php worker make service UserService
 ```
 
- The generated file is placed under:
+ The worker creates:
 
 ```
 app/Service/UserService.php
 ```
 
- The generated class belongs to the `App\Service` namespace.
+ The generator is implemented directly by `worker` and uses:
 
- A typical service is a normal PHP class:
+```
+resources/template/Service.php
+```
+
+ The current OwnWork service template contains:
 
 ```php
 <?php
 
-namespace App\Service;
-
-class UserService
-{
-    //
-}
-```
-
- ## Why Use Services
-
- A controller is responsible for handling an HTTP operation. As application logic grows, putting all business logic directly into controllers can make them difficult to maintain.
-
- A service can provide a separate application-level boundary:
-
-```
-HTTP Request
-     ↓
-Controller
-     ↓
-Service
-     ↓
-Model / External API / Other application code
-     ↓
-Controller
-     ↓
-HTTP Response
-```
-
- For example, instead of putting user creation logic directly in a controller:
-
-```
-public function store(
-    Request $request,
-    Response $response
-) {
-    // Validate input.
-    // Create user.
-    // Send email.
-    // Log operation.
-    // ...
-}
-```
-
- the controller can delegate the operation:
-
-```
-public function store(
-    Request $request,
-    Response $response
-) {
-    $service = new UserService();
-
-    $user = $service->create(
-        $request->get("name")
-    );
-
-    return $response->json($user);
-}
-```
-
- ## Basic Service
-
- A service can expose methods for application operations:
-
-```php
-<?php
+declare(strict_types = 1);
 
 namespace App\Service;
 
-class UserService
-{
-    public function create($name)
-    {
-        // Application-specific user creation.
+use Dhruv125\Coretex\Viewer\View;
+
+use Dhruv125\Coretex\Support\Request;
+use Dhruv125\Coretex\Support\Response;
+
+class DEFAULT_NAME {
+
+    function __construct() {
+        // Default Service
     }
 
-    public function find($id)
-    {
-        // Application-specific user lookup.
+    public function index(Request $request, Response $response) {
+
     }
 }
 ```
 
- The service does not need to know how the request reached it.
+ The worker replaces `DEFAULT_NAME` with the requested service name.
 
- ## Service Generation
+ ## Service Location
 
- The worker service generator uses the project's service template under:
-
-```
-resources/template/
-```
-
- The generated class is written to:
+ Application services belong under:
 
 ```
 app/Service/
 ```
 
- This follows the same application-code generation approach used for controllers and models.
+ For example:
+
+```
+app/
+└── Service/
+    ├── UserService.php
+    ├── OrderService.php
+    └── EmailService.php
+```
+
+ The namespace is:
+
+```
+namespace App\Service;
+```
+
+ ## Service Generation
+
+ The worker registers `service` as one of its application component generators.
+
+ The relevant worker mappings are:
+
+```
+service
+    ↓
+app/Service/
+    ↓
+resources/template/Service.php
+```
+
+ The generated file is a normal PHP class.
+
+ OwnWork does not add additional service metadata or registration.
+
+ ## Service Methods
+
+ A service can expose application operations through its methods.
+
+ For example:
+
+```php
+<?php
+
+namespace App\Service;
+
+class UserService
+{
+    public function find($id)
+    {
+        // Application-specific operation.
+    }
+
+    public function create($data)
+    {
+        // Application-specific operation.
+    }
+}
+```
+
+ The framework does not prescribe the names or responsibilities of these methods.
 
  ## Using a Service from a Controller
 
- Import the service:
+ A controller can use a service directly:
 
 ```
 use App\Service\UserService;
-```
 
- Create the service and call its operation:
-
-```
 public function show(
     Request $request,
     Response $response
 ) {
-    $params = $request->getAttribute(
-        "dynamicParams"
-    );
+    $params = $request->getAttribute("dynamicParams");
 
     $service = new UserService();
 
-    $user = $service->find(
-        $params["id"]
-    );
+    $user = $service->find($params["id"]);
 
     return $response->json($user);
 }
 ```
 
- The controller remains responsible for HTTP concerns while the service handles the application operation.
+ The controller handles HTTP-specific work while the service performs the application operation.
 
- ## Services and Models
+ ## Service and HTTP Objects
 
- A service can delegate persistence operations to a model.
+ The generated service template currently imports:
+
+```
+use Dhruv125\Coretex\Support\Request;
+use Dhruv125\Coretex\Support\Response;
+```
+
+ and its generated `index()` method accepts them:
+
+```
+public function index(
+    Request $request,
+    Response $response
+) {
+}
+```
+
+ This is the default generated structure.
+
+ However, a service method does not have to use HTTP objects unless the application requires them.
+
+ For reusable application logic, it is generally preferable to pass the required values rather than coupling every operation to the HTTP request.
 
  For example:
 
 ```
-app/
-├── Controller/
-│   └── UserController.php
-├── Model/
-│   └── UserModel.php
-└── Service/
-    └── UserService.php
+public function find($id)
+{
+    // ...
+}
 ```
 
- The service can use the model:
+ rather than:
+
+```
+public function find(Request $request)
+{
+    // ...
+}
+```
+
+ when the service only needs an ID.
+
+ ## Service and Models
+
+ Services can coordinate models:
+
+```
+Controller
+    ↓
+Service
+    ↓
+Model
+    ↓
+Persistence
+```
+
+ For example:
 
 ```php
 <?php
@@ -190,11 +220,93 @@ use App\Model\UserModel;
 
 class UserService
 {
+    public function find($id)
+    {
+        $users = new UserModel();
+
+        return $users->find($id);
+    }
+}
+```
+
+ The model remains responsible for application data and persistence operations.
+
+ The service can contain operations that combine multiple model operations or other application dependencies.
+
+ ## Services Without Models
+
+ A service does not require a model.
+
+ For example:
+
+```php
+<?php
+
+namespace App\Service;
+
+class EmailService
+{
+    public function send($recipient, $message)
+    {
+        // Application-specific implementation.
+    }
+}
+```
+
+ Services can coordinate any application-level operation that benefits from being separated from controllers.
+
+ ## Static Service Methods
+
+ OwnWork does not require services to be instantiated through a framework container.
+
+ If an operation is stateless and does not require instance state, an application may expose it as a static method:
+
+```php
+<?php
+
+namespace App\Service;
+
+class UserService
+{
+    public static function find($id)
+    {
+        // Application-specific operation.
+    }
+}
+```
+
+ It can then be called directly:
+
+```
+$user = UserService::find($id);
+```
+
+ Static methods can be convenient for stateless utility-style service operations.
+
+ They are not a special OwnWork feature, however, and the current OwnWork service generator itself generates an instance method:
+
+```
+public function index(
+    Request $request,
+    Response $response
+) {
+}
+```
+
+ Therefore, applications are free to choose between instance methods and static methods according to the service's design.
+
+ ## Constructor Dependencies
+
+ Services can use constructors when instance dependencies are required:
+
+```
+class UserService
+{
     private $users;
 
-    public function __construct()
+    public function __construct(UserModel $users)
     {
-        $this->users = new UserModel();
+        $this->users = $users;
     }
 
     public function find($id)
@@ -204,23 +316,45 @@ class UserService
 }
 ```
 
- The resulting application flow is:
+ The service can then be created by the application:
 
 ```
+$service = new UserService(
+    new UserModel()
+);
+```
+
+ OwnWork does not provide or require a dependency-injection container for services.
+
+ ## Service and Response Objects
+
+ A service generally does not need to construct an HTTP response when it is being used as an application layer.
+
+ For example:
+
+```
+$user = $service->find($id);
+
+return $response->json($user);
+```
+
+ This keeps the responsibilities separated:
+
+```
+Service
+    ↓
+Application result
+
 Controller
     ↓
-UserService
-    ↓
-UserModel
-    ↓
-Persistence
+HTTP response
 ```
 
- The exact persistence implementation belongs to the application.
+ If an application intentionally designs a service around HTTP operations, it can use Coretex's request and response objects as supported by the generated service template.
 
- ## Services and Dynamic Parameters
+ ## Service and Route Parameters
 
- Dynamic route parameters should normally be extracted at the HTTP boundary.
+ Route parameters belong to the HTTP layer.
 
  For example:
 
@@ -231,7 +365,7 @@ $route->get("/users/{id}", [
 ]);
 ```
 
- The controller retrieves the parameter:
+ The controller obtains the dynamic parameter:
 
 ```
 $params = $request->getAttribute(
@@ -241,7 +375,13 @@ $params = $request->getAttribute(
 $id = $params["id"];
 ```
 
- The service receives the value:
+ The value can then be passed to a service:
+
+```
+$user = UserService::find($id);
+```
+
+ or:
 
 ```
 $service = new UserService();
@@ -249,127 +389,72 @@ $service = new UserService();
 $user = $service->find($id);
 ```
 
- The service does not need to know that `$id` originally came from a URL.
+ The service does not need to know that the value originated from a route.
 
- ## Services and Request Objects
+ ## Service Responsibilities
 
- Services do not need to receive the HTTP request simply because a controller does.
+ Services are useful for application operations such as:
 
- Prefer extracting the required data in the controller:
+ - coordinating multiple models
+- implementing reusable business operations
+- coordinating external APIs
+- handling application workflows
+- keeping controllers small
+- providing stateless operations through static methods where appropriate
 
-```
-$name = $request->get("name");
+ The exact responsibility of a service is application-defined.
 
-$service->create($name);
-```
+ ## Controller, Service, and Model
 
- rather than coupling the service directly to HTTP:
-
-```
-$service->create($request);
-```
-
- unless the application deliberately wants that design.
-
- This keeps the service usable outside an HTTP controller.
-
- ## Services and Responses
-
- A service should normally return application data or an application result rather than constructing an HTTP response.
-
- For example:
+ A common OwnWork application can separate responsibilities as:
 
 ```
-$user = $service->find($id);
-
-return $response->json($user);
+HTTP Request
+     ↓
+Controller
+     ↓
+Service
+     ↓
+Model
+     ↓
+Persistence
 ```
 
- Here:
+ The boundaries are conventions rather than framework-enforced layers.
 
-```
-Service → application result
-Controller → HTTP response
-```
-
- This separation allows the same service operation to be reused by different application entry points.
-
- ## Example: User Creation
-
- A service can encapsulate multiple operations:
-
-```php
-<?php
-
-namespace App\Service;
-
-use App\Model\UserModel;
-
-class UserService
-{
-    private $users;
-
-    public function __construct()
-    {
-        $this->users = new UserModel();
-    }
-
-    public function create($name, $email)
-    {
-        if (empty($name)) {
-            throw new \InvalidArgumentException(
-                "Name is required."
-            );
-        }
-
-        if (empty($email)) {
-            throw new \InvalidArgumentException(
-                "Email is required."
-            );
-        }
-
-        return $this->users->create([
-            "name" => $name,
-            "email" => $email
-        ]);
-    }
-}
-```
-
- The controller can remain focused on HTTP handling:
-
-```
-public function store(
-    Request $request,
-    Response $response
-) {
-    $service = new UserService();
-
-    $user = $service->create(
-        $request->get("name"),
-        $request->get("email")
-    );
-
-    return $response->json($user);
-}
-```
-
- ## Services and External Dependencies
-
- A service can also coordinate external application dependencies.
-
- For example:
+ A small application may use:
 
 ```
 Controller
     ↓
+Model
+```
+
+ without introducing a service.
+
+ A larger operation may use:
+
+```
+Controller
+    ↓
+Service
+    ├── Model
+    ├── External API
+    └── Other Services
+```
+
+ ## Services and External Dependencies
+
+ A service can coordinate external dependencies:
+
+```
 OrderService
     ├── OrderModel
     ├── PaymentGateway
     └── NotificationService
 ```
 
- The service can act as the application-level coordinator:
+ For example:
 
 ```
 public function placeOrder($data)
@@ -378,68 +463,17 @@ public function placeOrder($data)
 
     $this->payment->charge($order);
 
-    $this->notifications->send(
-        $order
-    );
+    $this->notifications->send($order);
 
     return $order;
 }
 ```
 
- The actual implementations of these dependencies are application-specific.
-
- ## Constructor Dependencies
-
- A service can accept dependencies through its constructor:
-
-```
-class UserService
-{
-    private $users;
-
-    public function __construct(
-        UserModel $users
-    ) {
-        $this->users = $users;
-    }
-}
-```
-
- It can then be instantiated by the application:
-
-```
-$service = new UserService(
-    new UserModel()
-);
-```
-
- OwnWork does not require a dependency-injection container for services.
-
- If an application uses a container, it can integrate that container independently.
-
- ## Services Without Models
-
- Not every service needs a model.
-
- For example, a mail-related service could contain:
-
-```
-class EmailService
-{
-    public function send(
-        $recipient,
-        $message
-    ) {
-        // Application-specific email operation.
-    }
-}
-```
-
- The service directory can contain any application-level reusable operation that benefits from being separated from controllers.
+ The implementations of these dependencies are outside OwnWork's service layer.
 
  ## Service Naming
 
- A common naming convention is to use the `Service` suffix:
+ A conventional naming scheme uses the `Service` suffix:
 
 ```
 UserService.php
@@ -448,33 +482,19 @@ EmailService.php
 PaymentService.php
 ```
 
- with corresponding classes:
+ with:
 
 ```
 class UserService
 {
 }
-
-class OrderService
-{
-}
-
-class EmailService
-{
-}
-
-class PaymentService
-{
-}
 ```
 
- The suffix is a convention rather than a framework requirement.
+ The suffix is a convention and is not enforced by OwnWork.
 
  ## Service Exceptions
 
- Services can throw exceptions when an application operation cannot be completed.
-
- For example:
+ Services may throw normal PHP exceptions:
 
 ```
 public function find($id)
@@ -489,94 +509,69 @@ public function find($id)
 }
 ```
 
- The exception can propagate back through the controller and request lifecycle.
+ The exception can propagate through the application's normal request and error-handling flow.
 
- Application-wide error handling can then handle the exception according to the application's configuration.
+ OwnWork does not define a special service exception type.
 
- See Error Handling.
+ ## Service Independence
 
- ## Service Testing
+ A service can be designed independently of the HTTP layer.
 
- Because a service does not inherently depend on HTTP request or response objects, its operations can be tested independently of the HTTP layer.
+ For example:
 
- For example, the application can test:
+```
+$user = UserService::find($id);
+```
+
+ or:
 
 ```
 $service = new UserService();
 
-$result = $service->create(
-    "Dhruv",
-    "dhruv@example.com"
-);
+$user = $service->find($id);
 ```
 
- The exact testing framework is not imposed by OwnWork.
+ This allows the same application operation to be reused by controllers, commands, jobs, or other application code without requiring a particular HTTP entry point.
 
- ## When to Use a Service
+ ## What OwnWork Provides
 
- A service is useful when an operation:
+ For services, OwnWork provides:
 
- - contains business logic
-- is reused by multiple controllers
-- coordinates multiple models
-- coordinates external dependencies
-- would make a controller unnecessarily large
-- should be usable independently of HTTP
+ - `app/Service/` as the conventional service directory
+- `php worker make service ...`
+- `resources/template/Service.php` as the generation template
+- Composer autoloading for application classes
 
- For very small operations, a separate service may not be necessary.
+ OwnWork does not provide:
 
- ## Controller vs Service vs Model
+ - a service base class
+- a service interface
+- a required dependency-injection container
+- automatic service registration
+- a required service architecture
+- a required repository pattern
+- a required ORM
 
- The three layers can be separated by responsibility:
-
- | Layer | Primary responsibility |
-| --- | --- |
-| Controller | HTTP input and output |
-| Service | Application/business operations |
-| Model | Data and persistence operations |
-
-A typical request can therefore look like:
-
-```
-Request
-   ↓
-Controller
-   ↓
-Service
-   ↓
-Model
-   ↓
-Database
-   ↓
-Model
-   ↓
-Service
-   ↓
-Controller
-   ↓
-Response
-```
-
- This architecture is a convention available to OwnWork applications rather than a mandatory framework structure.
+ These decisions belong to the application.
 
  ## Service Workflow
 
- A typical workflow is:
+ A typical service workflow is:
 
 ```
 Create service
     ↓
 php worker make service UserService
     ↓
-Add application operation
+Implement application operation
     ↓
-Use models or other dependencies
+Use models or other dependencies when needed
     ↓
-Call service from controller
+Call service from application code
     ↓
-Return result from controller
+Return or use the application result
 ```
 
- The OwnWork package currently identifies itself as a minimal MVC framework and provides the application directories and generators needed to build this structure, while leaving additional application functionality to the developer.  root.packagist.org
+ OwnWork intentionally keeps the service layer minimal. The worker generates the class, while the application decides how services should be structured and used.
 
-> next: `http/request.md`
+> `cli/worker.md`

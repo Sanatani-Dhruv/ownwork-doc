@@ -1,25 +1,25 @@
 # Installation
 
-OwnWork is distributed as a Composer project.
+ OwnWork is distributed as a Composer project.
 
-## Requirements
+ ## Requirements
 
-OwnWork currently requires:
+ OwnWork currently requires:
 
-- PHP `^8.0`
+ - PHP `^8.0`
 - Composer
 
-The framework declares `dhruv125/coretex` `^1.0` as a runtime dependency.
+ The framework declares `dhruv125/coretex` `^1.0` as a runtime dependency.
 
-For the optional frontend development workflow, Node.js and npm can also be used.
+ Node.js and npm are optional. They are required only when using OwnWork's frontend development/build tooling for Tailwind CSS and JavaScript.
 
-## Create a New Project
+ ## Create a New Project
 
-Create an OwnWork application with Composer:
+ Create an OwnWork application with Composer:
 
-```bash
+```
 composer create-project dhruv125/ownwork my-app
-````
+```
 
  Then enter the project directory:
 
@@ -37,10 +37,10 @@ composer run setup
 
  The setup script performs two operations:
 
- 1. Installs the Composer dependencies.
+ 1. Runs `composer install` to install the project's Composer dependencies.
 2. Creates `.env` from `.env.example` if `.env` does not already exist.
 
- The setup command is defined by the project's Composer configuration:
+ The setup command is defined in the project's Composer configuration:
 
 ```
 "setup": [
@@ -61,7 +61,7 @@ my-app/
 └── ...
 ```
 
- OwnWork's application bootstrap checks for both `.env` and `vendor/autoload.php` before starting the application.
+ OwnWork's `Bundler` checks for both `.env` and `vendor/autoload.php` before starting the application.
 
  If either is missing, OwnWork stops execution and displays a setup error instructing you to run:
 
@@ -71,13 +71,13 @@ composer run setup
 
  ## Start the Development Server
 
- Start the application with:
+ The Composer development command starts PHP's built-in development server:
 
 ```
 composer run dev
 ```
 
- The default Composer development script starts PHP's built-in development server with:
+ It uses:
 
  - Host: `localhost`
 - Port: `8000`
@@ -89,7 +89,7 @@ composer run dev
 http://localhost:8000
 ```
 
- You can also start the server directly through the OwnWork worker:
+ The same server can be started directly through the OwnWork worker:
 
 ```
 php worker serve
@@ -103,17 +103,23 @@ php worker serve
 php worker serve 8080
 ```
 
- The server will then use:
+ The application will then be available at:
 
 ```
 http://localhost:8080
 ```
 
+ The `serve` command invokes PHP's built-in server with `public/` as the document root.
+
  ## Optional Node.js Setup
 
- Node.js and npm are optional dependencies.
+ Node.js and npm are optional for the PHP framework itself.
 
- They are useful when working with the project's frontend tooling, including the JavaScript and CSS development workflow.
+ They are used by the project's frontend tooling, including:
+
+ - Tailwind CSS development and production builds
+- JavaScript bundling through esbuild
+- Running the frontend development workflow alongside the PHP server and OwnWork view transpiler
 
  Install the Node dependencies with:
 
@@ -121,11 +127,20 @@ http://localhost:8080
 npm install
 ```
 
- The exact frontend workflow is described in the development documentation.
+ The project defines the following frontend commands:
+
+```
+npm run tw:dev
+npm run tw:build
+npm run js:run
+npm run js:build
+```
+
+ The combined frontend/build workflow is described in the development documentation.
 
  ## Installation Flow
 
- A typical new OwnWork project can therefore be initialized with:
+ A basic OwnWork application can therefore be initialized and started with:
 
 ```
 composer create-project dhruv125/ownwork my-app
@@ -134,6 +149,12 @@ composer run setup
 composer run dev
 ```
 
- At this point, the OwnWork application is running through `public/index.php`.
+ For projects using the frontend tooling, install the Node dependencies separately:
 
-> next: `getting-started/first-app.md`
+```
+npm install
+```
+
+ At runtime, the application starts from `public/index.php`, which bootstraps OwnWork through its `Bundler`.
+
+ > `getting-started/first-app.md`

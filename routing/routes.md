@@ -1,6 +1,6 @@
 # Routes
 
-OwnWork uses the `Route` class provided by Coretex for HTTP route registration and matching.
+OwnWork uses the `Route` class provided by Coretex for registering and matching HTTP routes.
 
 Application routes are defined in:
 
@@ -8,23 +8,25 @@ Application routes are defined in:
 bundle/Routes.php
 ````
 
- The route object is available in that file as `$route`.
+ The `$route` object is available when `bundle/Routes.php` is loaded by OwnWork's HTTP kernel.
 
  ## Basic Route
 
  The simplest route maps a URL to a handler:
 
-```
+```php
+<?php
+
 $route->get("/", "main.temp.php");
 ```
 
- The route above registers a `GET` request for `/`.
+ This registers a `GET` route for `/`.
 
  The second argument is the route handler.
 
  ## HTTP Methods
 
- The router provides methods for the following HTTP methods:
+ Coretex's route class provides methods for:
 
  - `GET`
 - `POST`
@@ -34,13 +36,17 @@ $route->get("/", "main.temp.php");
 
  ### GET
 
-```
+```php
+<?php
+
 $route->get("/users", "users.temp.php");
 ```
 
  ### POST
 
-```
+```php
+<?php
+
 $route->post("/users", [
     UserController::class,
     "store"
@@ -49,7 +55,9 @@ $route->post("/users", [
 
  ### PUT
 
-```
+```php
+<?php
+
 $route->put("/users/{id}", [
     UserController::class,
     "update"
@@ -58,7 +66,9 @@ $route->put("/users/{id}", [
 
  ### PATCH
 
-```
+```php
+<?php
+
 $route->patch("/users/{id}", [
     UserController::class,
     "update"
@@ -67,49 +77,63 @@ $route->patch("/users/{id}", [
 
  ### DELETE
 
-```
+```php
+<?php
+
 $route->delete("/users/{id}", [
     UserController::class,
     "destroy"
 ]);
 ```
 
- All five methods accept the same basic arguments:
+ The route methods accept a URL and a handler.
 
-```
-$route->get(
-    string $url,
-    callable|array|string $handler
-);
-```
-
- The HTTP method determines which route table the route is registered in.
+ The HTTP method determines which route collection is used during matching.
 
  ## View Routes
 
  A string handler can be used as a view route:
 
-```
+```php
+<?php
+
 $route->get("/", "main.temp.php");
 ```
 
- When the route is matched, the route resolver treats the string as a view handler.
+ When the route is resolved, Coretex's route resolver treats the string handler as a view.
 
- This is useful for pages that do not require a controller.
+ This is useful for simple pages that do not require a controller.
+
+ For example:
+
+```php
+<?php
+
+$route->get("/about", "about.temp.php");
+
+$route->get("/contact", "contact.temp.php");
+```
+
+ The corresponding templates are located under:
+
+```
+resources/views/
+```
 
  For example:
 
 ```
-$route->get("/about", "about.temp.php");
-
-$route->get("/contact", "contact.temp.php");
+resources/views/about.temp.php
+resources/views/contact.temp.php
 ```
 
  ## Closure Routes
 
  A route can use a callable:
 
-```
+```php
+<?php
+
 $route->get("/hello", function () {
     return "Hello World";
 });
@@ -117,13 +141,15 @@ $route->get("/hello", function () {
 
  The callable becomes the route handler.
 
- This is useful for small handlers where a separate controller is unnecessary.
+ This is useful for small handlers where creating a separate controller would add unnecessary structure.
 
  ## Controller Routes
 
  Controller actions can be registered using a two-element array:
 
-```
+```php
+<?php
+
 use App\Controller\UserController;
 
 $route->get("/users", [
@@ -134,37 +160,26 @@ $route->get("/users", [
 
  The first element is the controller class.
 
- The second element is the method to execute.
+ The second element is the method that should be executed.
 
- The same form works with other HTTP methods:
+ The same form can be used with other HTTP methods:
 
-```
+```php
+<?php
+
 $route->post("/users", [
     UserController::class,
     "store"
 ]);
 ```
 
- ## Controller Method Default
-
- Coretex's middleware API defaults a controller-style handler to the `index` method when only the class is supplied.
-
- For normal route registration, use the explicit two-element form:
-
-```
-$route->get("/users", [
-    UserController::class,
-    "index"
-]);
-```
-
- This makes the intended action explicit.
-
  ## Dynamic URLs
 
  Route URLs can contain dynamic parameters:
 
-```
+```php
+<?php
+
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -187,7 +202,9 @@ $route->get("/users/{id}", [
 
  Multiple parameters are supported:
 
-```
+```php
+<?php
+
 $route->get("/users/{id}/{name}", [
     UserController::class,
     "show"
@@ -200,7 +217,7 @@ $route->get("/users/{id}/{name}", [
 /users/42/dhruv
 ```
 
- the router produces:
+ the matched parameters are conceptually:
 
 ```
 [
@@ -209,19 +226,21 @@ $route->get("/users/{id}/{name}", [
 ]
 ```
 
- See Dynamic Parameters for details.
+ The parameters are exposed to the application through the request attributes created during request handling.
+
+ See `routing/dynamic-parameters.md` for details.
 
  ## Route Matching
 
- The router first selects the route collection corresponding to the incoming HTTP method.
+ The router keeps separate route collections for the supported HTTP methods.
 
- It then checks each registered URL against the current request URL.
+ When the request is processed, Coretex matches the request method against the corresponding collection and then checks the registered URL patterns.
 
- Static routes are matched directly.
+ A static route such as:
 
- For example:
+```php
+<?php
 
-```
 $route->get("/users", "users.temp.php");
 ```
 
@@ -231,50 +250,57 @@ $route->get("/users", "users.temp.php");
 /users
 ```
 
- but not:
+ but does not match:
 
 ```
 /users/42
 ```
 
- Dynamic route parameters use a generated regular expression.
+ Dynamic parameters are represented using `{parameter}` syntax.
 
- For:
+ For example:
 
-```
+```php
+<?php
+
 $route->get("/users/{id}", "user.temp.php");
 ```
 
- the `{id}` portion is replaced internally with a word-character pattern.
+ The `{id}` portion is converted internally into a regular-expression component used to match the corresponding URL segment.
 
- The complete generated expression is anchored to the beginning and end of the URL, so the complete path must match.
+ The generated expression is anchored so that the request URL must match the complete route pattern.
 
  ## Route Registration Order
 
  Routes are stored in the order in which they are registered.
 
- During matching, the router iterates through the routes for the current HTTP method and stops when it finds a matching route.
+ During matching, Coretex checks the registered routes for the current HTTP method in that order and stops when a matching route is found.
 
- Therefore, when multiple route patterns could match a request, registration order can affect which route is selected.
+ Therefore, overlapping routes can be affected by registration order.
 
- Example:
+ For example:
 
-```
+```php
+<?php
+
 $route->get("/users/{id}", "user.temp.php");
+
 $route->get("/users/admin", "admin.temp.php");
 ```
 
- The dynamic route is registered first, so `/users/admin` can match it before the later static route is reached.
+ Because the dynamic route is registered first, `/users/admin` can be matched by the dynamic route before the later static route is reached.
 
- When route patterns may overlap, place the intended specific route before a broader dynamic route.
+ When routes overlap, register the intended specific route before a broader dynamic route.
 
  ## Current Route
 
- When a route is successfully matched, Coretex returns the matched route pattern as `currentRoute`.
+ When a route is matched, OwnWork stores the matched route information on the request.
 
  For:
 
-```
+```php
+<?php
+
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -293,13 +319,36 @@ $route->get("/users/{id}", [
 /users/{id}
 ```
 
- OwnWork exposes this routing information through the request attributes used during request processing.
+ Application code can access this through the request attributes:
+
+```php
+<?php
+
+$currentRoute = $request->getAttribute("currentRoute");
+```
 
  ## Route Parameters
 
- The router returns dynamic values separately from the route pattern.
+ Dynamic parameter values are stored separately from the route pattern.
 
- A successful match contains:
+ For:
+
+```php
+<?php
+
+$route->get("/users/{id}", [
+    UserController::class,
+    "show"
+]);
+```
+
+ and:
+
+```
+/users/42
+```
+
+ the matching information contains the equivalent of:
 
 ```
 [
@@ -310,34 +359,40 @@ $route->get("/users/{id}", [
 ]
 ```
 
- OwnWork makes these parameters available through the request:
+ OwnWork places the dynamic parameters into the request attributes:
 
-```
+```php
+<?php
+
 $params = $request->getAttribute("dynamicParams");
 ```
 
+ This allows controllers and middleware to access route parameters without directly interacting with the router.
+
  ## Route Middleware
 
- Routes have a middleware collection associated with them.
+ Each registered route starts with its own middleware collection.
 
- A route registered with `get()`, `post()`, `put()`, `patch()`, or `delete()` starts with an empty middleware collection:
+ Conceptually, a route is stored with:
 
 ```
 [
-    "handler" => $handler,
+    "handler" => ...,
     "middlewares" => []
 ]
 ```
 
- Middleware can subsequently be associated with a route through the router's middleware API.
+ Middleware can subsequently be associated with the route through the router's middleware API.
 
- See Middleware.
+ See `routing/middleware.md` for the middleware API and execution behavior.
 
  ## Global Middleware
 
- Middleware can also be registered globally:
+ Coretex also allows middleware to be registered globally:
 
-```
+```php
+<?php
+
 $route->globalMiddleware(
     [AuthMiddleware::class, "handle"]
 );
@@ -345,7 +400,9 @@ $route->globalMiddleware(
 
  A callable can also be registered:
 
-```
+```php
+<?php
+
 $route->globalMiddleware(
     function ($request, $response, $next) {
         return $next();
@@ -353,13 +410,15 @@ $route->globalMiddleware(
 );
 ```
 
- Global middleware is stored separately from individual route middleware and is available to the application kernel.
+ Global middleware is stored separately from individual route middleware and is made available to OwnWork's kernel during request processing.
 
  ## Middleware Parameters
 
- Global middleware accepts an optional parameters array:
+ Global middleware can receive an optional parameters array:
 
-```
+```php
+<?php
+
 $route->globalMiddleware(
     [AuthMiddleware::class, "handle"],
     [
@@ -372,11 +431,13 @@ $route->globalMiddleware(
 
  ## Multiple Routes for Middleware
 
- The `middleware()` API accepts either a single URL or an array of URLs.
+ The `middleware()` API can target either a single route URL or multiple URLs.
 
  For example:
 
-```
+```php
+<?php
+
 $route->middleware(
     "GET",
     "/users",
@@ -386,7 +447,9 @@ $route->middleware(
 
  Multiple URLs can be supplied:
 
-```
+```php
+<?php
+
 $route->middleware(
     "GET",
     [
@@ -402,10 +465,12 @@ $route->middleware(
 
  ## Listing Registered Routes
 
- The router exposes all registered route patterns through:
+ The router exposes registered route URLs through:
 
-```
-$route->getAllRoutes();
+```php
+<?php
+
+$routes = $route->getAllRoutes();
 ```
 
  The result is grouped by HTTP method.
@@ -429,17 +494,19 @@ $route->getAllRoutes();
 ]
 ```
 
- Only registered route URLs are returned; handler details and middleware are not included in this listing.
+ This listing contains the registered route URLs rather than the complete handler and middleware definitions.
 
  ## Completing Route Matching
 
- The router's `end()` method performs route matching against the current request.
+ The router's `end()` method performs matching against the current request:
 
-```
+```php
+<?php
+
 $result = $route->end();
 ```
 
- For a successful match, the result contains:
+ A successful match contains routing information including:
 
 ```
 [
@@ -451,9 +518,9 @@ $result = $route->end();
 ]
 ```
 
- For an unsuccessful match, the router returns the match result indicating that no route was found.
+ OwnWork's kernel uses this result to continue request processing.
 
- OwnWork's kernel uses this result as part of request processing.
+ If no route matches, the kernel handles the resulting `PageNotFoundException` and produces the application's 404 response.
 
  ## Route File Example
 
@@ -512,10 +579,10 @@ $route->delete("/users/{id}", [
 | `delete()` | Register a DELETE route |
 | `middleware()` | Attach middleware to routes |
 | `globalMiddleware()` | Register global middleware |
-| `getGlobalMiddleware()` | Retrieve global middleware |
+| `getGlobalMiddleware()` | Retrieve registered global middleware |
 | `getAllRoutes()` | Retrieve registered route URLs |
 | `end()` | Match the current request |
 
 The underlying router is implemented by Coretex's `Dhruv125\Coretex\Router\Route` class.
 
-> next: `routing/dynamic-parameters.md`
+ > next: `routing/dynamic-parameters.md`

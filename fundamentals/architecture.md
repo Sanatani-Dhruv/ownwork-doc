@@ -1,16 +1,40 @@
-# Architecture
+ # Architecture
 
-OwnWork is a small PHP application framework built around an HTTP request pipeline.
+ OwnWork is a small PHP application framework built around an HTTP request pipeline.
 
-The framework provides the application bootstrap, routing integration, middleware pipeline, controller resolution, views, template compilation, helpers, and development tooling.
+ OwnWork provides the application bootstrap, HTTP kernel, route registration, middleware orchestration, application structure, helpers, view workflow, and development tooling.
 
-Some lower-level HTTP and routing functionality is provided by the `dhruv125/coretex` package.
+ Some lower-level HTTP, routing, view, environment, and error-handling functionality is provided by the `dhruv125/coretex` package.
 
-## High-Level Architecture
+ The architecture is therefore best understood as two cooperating layers:
 
-A request moves through the application approximately as follows:
+```
+OwnWork
+   │
+   ├── Application bootstrap
+   ├── HTTP Kernel
+   ├── Application structure
+   ├── Middleware orchestration
+   ├── Helpers
+   ├── Worker CLI
+   └── Coretex integration
+          │
+          ▼
+      Coretex
+      ├── Request
+      ├── Response
+      ├── Route
+      ├── RouteResolver
+      ├── View
+      ├── Environment
+      └── Error handling
+```
 
-```text
+ ## High-Level Request Architecture
+
+ A request moves through the application approximately as follows:
+
+```
 HTTP Request
      │
      ▼
@@ -21,26 +45,35 @@ Bundler
      │
      ├── Composer autoloader
      ├── Environment
-     └── Error handler
+     └── Global error handler
      │
      ▼
 Http\Kernel
      │
      ├── Request
      ├── Response
-     ├── Router
+     ├── Route
      └── RouteResolver
+     │
+     ▼
+bundle/Routes.php
      │
      ▼
 Route Matching
      │
-     ▼
-Middleware Pipeline
+     ├── Dynamic parameters
+     └── Route middleware
      │
      ▼
-Route Handler
+Global Middleware
      │
-     ├── Closure
+     ▼
+Route Middleware
+     │
+     ▼
+RouteResolver
+     │
+     ├── Callable
      ├── View
      └── Controller
      │
@@ -49,9 +82,9 @@ Response
      │
      ▼
 HTTP Output
-````
+```
 
- The application entry point is intentionally small. Most request orchestration is performed by `Bundler` and `Kernel`.
+ The application entry point is intentionally small. `Bundler` handles application initialization, while `Kernel` coordinates request processing. The actual HTTP request, response, routing, and route resolution classes used by the kernel come from Coretex.
 
  ## Application Entry Point
 
@@ -61,18 +94,30 @@ HTTP Output
 public/index.php
 ```
 
- Its responsibility is to load the application bundler and start it:
+ Its current implementation is:
 
 ```php
 <?php
+
+declare(strict_types = 1);
+
+ob_start();
+
+use Bundle\Bundler;
 
 require __DIR__ . "/../bundle/Bundler.php";
 
 $app = new Bundler();
 $app->bundle();
+
+ob_end_flush();
 ```
 
- This makes `public/` the web-facing portion of the application.
+ `public/index.php` loads `bundle/Bundler.php`, creates the `Bundler`, and starts the application by calling `bundle()`.
+
+ The output buffer is started before application execution and flushed after the application finishes.
+
+ You normally do not need to modify `public/index.php`.
 
  ## Bundler
 
@@ -82,30 +127,36 @@ $app->bundle();
 bundle/Bundler.php
 ```
 
- Its main responsibilities are application startup tasks.
+ `Bundler` is responsible for initializing the application before the HTTP kernel starts.
 
- The bootstrap process includes:
+ Its constructor:
 
- 1. Checking that the application has been configured.
-2. Loading Composer's autoloader.
-3. Loading the environment configuration.
-4. Configuring error handling.
-5. Creating the application kernel.
-6. Starting request handling.
+ 1. Checks that `.env` exists.
+2. Checks that `vendor/autoload.php` exists.
+3. Loads Composer's autoloader.
+4. Creates Coretex's `Environment`.
+5. Loads the root `.env` configuration.
+6. Creates Coretex's `GlobalErrorHandler`.
+7. Stores the resulting error-level configuration for the handler.
+
+ Its `bundle()` method then creates the OwnWork `Kernel` and calls `handle()`.
 
  Conceptually:
 
 ```
 Bundler
    │
-   ├── Validate setup
+   ├── Check .env
+   ├── Check Composer autoloader
    ├── Load Composer
    ├── Load environment
-   ├── Configure errors
+   ├── Initialize error handler
    └── Start Kernel
 ```
 
- The bundler is not responsible for implementing individual routes or controllers.
+ `Bundler` does not register individual routes or execute controllers itself.
+
+ If the required `.env` or Composer autoloader is missing, `Bundler` stops the application and displays the setup error page when the corresponding error view exists.
 
  ## HTTP Kernel
 
@@ -115,113 +166,212 @@ Bundler
 app/Http/Kernel.php
 ```
 
- The kernel coordinates the HTTP request.
+ The kernel coordinates request processing.
 
- It creates the main request-processing objects and connects them together.
+ It creates:
 
- The kernel works with:
+ - Coretex `Request`
+- Coretex `Response`
+- Coretex `Route`
+- Coretex `RouteResolver`
+- Coretex `Pager`
 
- - `Request`
-- `Response`
-- `Route`
-- `RouteResolver`
-- `Pager`
+ The relevant classes are imported directly from:
 
- The kernel then loads the application's route definitions from:
+```
+Dhruv125\Coretex
+```
+
+ The kernel then loads:
 
 ```
 bundle/Routes.php
 ```
 
- and processes the current request.
+ using the application's root path.
 
- ## Router
+ After the routes are registered, it calls the route object's `end()` method to determine whether the current HTTP request matches a registered route.
 
- Routing functionality is supplied by Coretex.
+ ## Route Registration and Matching
 
- OwnWork creates a router and registers the application's routes through:
+ Routing itself is implemented by Coretex's `Route` class.
+
+ OwnWork creates the route object in the kernel and exposes it to:
 
 ```
 bundle/Routes.php
 ```
 
- Typical route declarations look like:
+ Applications register routes such as:
 
-```
+```php
+<?php
+
 $route->get("/", "home.temp.php");
 ```
 
  or:
 
-```
+```php
+<?php
+
 $route->get("/users", [
     UserController::class,
     "index"
 ]);
 ```
 
- The router determines which route corresponds to the incoming HTTP method and URL.
+ Coretex currently supports these HTTP methods:
+
+```
+GET
+POST
+PUT
+PATCH
+DELETE
+```
+
+ Route matching is performed against the request URL and HTTP method. Routes are checked in their registered order for the current method.
+
+ Dynamic parameters use `{name}` syntax:
+
+```php
+<?php
+
+$route->get("/users/{id}", [
+    UserController::class,
+    "show"
+]);
+```
+
+ For a request such as:
+
+```
+/users/42
+```
+
+ the route matcher produces:
+
+```
+id = 42
+```
+
+ The kernel stores the resulting parameters on the request as:
+
+```
+dynamicParams
+```
+
+ It also stores the matched route as:
+
+```
+currentRoute
+```
+
+ and the registered route list as:
+
+```
+routesArray
+```
+
+ These are request attributes available to application code.
 
  ## Route Resolver
 
- After a route has been matched, the route resolver determines how its handler should be executed.
+ After route matching and middleware execution, the kernel passes the selected handler to Coretex's `RouteResolver`.
 
- OwnWork supports handler forms including:
+ The resolver supports three main handler forms.
 
+ ### Callable Handler
+
+ A route can use a callable:
+
+```php
+<?php
+
+$route->get("/hello", function () {
+    return "Hello from OwnWork";
+});
 ```
-function () {
-    return "Hello";
-}
+
+ The resolver invokes the callable directly.
+
+ When dynamic route parameters are present, the resolver uses the callable's parameter count to pass matching dynamic values to it.
+
+ ### View Handler
+
+ A string handler is treated as a view name:
+
+```php
+<?php
+
+$route->get("/", "home.temp.php");
 ```
 
- a view name:
+ The Coretex resolver passes the view name to its view system.
 
-```
-"home.temp.php"
-```
+ ### Controller Handler
 
- and a controller action:
+ A controller action can be registered as:
 
-```
-[
+```php
+<?php
+
+$route->get("/users", [
     UserController::class,
     "index"
-]
+]);
 ```
 
- This separates route matching from route execution.
+ The resolver creates an instance of the controller and calls the specified method with:
+
+```
+Request
+Response
+Route parameters
+```
+
+ If only the controller class is supplied, the resolver falls back to an `index` method when that method exists.
+
+ This means controller classes do not need to extend a framework-provided base controller.
 
  ## Middleware
 
- Middleware forms the processing layer between route matching and the final handler.
+ Middleware is executed between route matching and route resolution.
 
- A middleware receives:
+ OwnWork's kernel builds the middleware chain and executes it recursively.
 
-```
+ A middleware receives the request and response objects followed by a `$next` callable:
+
+```php
+<?php
+
 function (
     Request $request,
     Response $response,
     callable $next
-)
+) {
+    return $next();
+}
 ```
 
- It can:
+ A middleware can:
 
  - inspect the request
 - modify processing
-- return a response immediately
-- call `$next()` to continue processing
+- return a response without continuing
+- call `$next()` to continue to the next middleware
 
- Conceptually:
+ The effective processing order is:
 
 ```
 Request
    │
    ▼
-Middleware A
+Global Middleware
    │
    ▼
-Middleware B
+Route Middleware
    │
    ▼
 Route Handler
@@ -230,30 +380,50 @@ Route Handler
 Response
 ```
 
- This makes middleware suitable for concerns such as authentication, request checks, logging, and other cross-cutting behavior.
+ The kernel collects middleware attached to the matched route and then prepends global middleware before executing the complete chain.
+
+ Coretex supports registering middleware against individual routes or groups of routes, as well as global middleware.
 
  ## Controllers
 
- Controllers live under:
+ Controllers normally live under:
 
 ```
 app/Controller/
 ```
 
- A controller action receives the request and response objects:
+ A controller is an application class. OwnWork does not require controllers to extend a framework base class.
 
-```
+ A typical controller action receives:
+
+```php
+<?php
+
 public function index(
     Request $request,
     Response $response
 ) {
-    // ...
+    return "Hello";
 }
 ```
 
- Controllers are application code rather than framework configuration.
+ The request and response classes are provided by Coretex.
 
- A controller can perform application operations and return a response or rendered view.
+ When a route contains dynamic parameters, the route resolver also passes the parameter array as the third argument:
+
+```php
+<?php
+
+public function show(
+    Request $request,
+    Response $response,
+    array $params
+) {
+    return "User: " . $params["id"];
+}
+```
+
+ Controllers are therefore responsible for application-specific request handling rather than framework configuration.
 
  ## Models
 
@@ -263,19 +433,25 @@ public function index(
 app/Model/
 ```
 
- The directory is part of OwnWork's application structure, but OwnWork does not impose a built-in ORM or database abstraction on model classes.
+ This directory is part of OwnWork's application structure.
 
- Applications are therefore free to implement their own model layer or integrate an external database/ORM library.
+ OwnWork does not define a model base class or impose an ORM on model classes.
+
+ The bundled helper contains an optional `get_db_instance()` function that can create a database instance when the optional `delight-im/db` package is installed and the corresponding `DB_*` environment variables are configured.
+
+ Applications can also implement their own data-access layer or use another database package.
+
+ Therefore, `app/Model/` is an application convention rather than a required OwnWork ORM layer.
 
  ## Services
 
- Services belong under:
+ Services normally belong under:
 
 ```
 app/Service/
 ```
 
- A service is an application-level class intended to keep reusable operations and business logic separate from controllers.
+ A service is an application-level class that can contain reusable operations or business logic.
 
  For example:
 
@@ -285,67 +461,113 @@ Controller
     ▼
 Service
     │
-    ▼
-Model / External API / Other dependency
+    ├── Model
+    ├── Database
+    └── External API
 ```
 
- OwnWork does not require a particular service interface.
+ OwnWork does not define a service base class or require a particular service interface.
+
+ The `app/Service/` directory is an application organization convention supported by the worker's service generator.
 
  ## Views
 
- Views live under:
+ View source files normally live under:
 
 ```
 resources/views/
 ```
 
- OwnWork supports normal PHP views and `.temp.php` templates.
+ OwnWork's view workflow uses `.temp.php` files as template source.
 
- A `.temp.php` file is processed by the template engine before being executed as PHP.
+ For example:
 
- Compiled templates are stored under:
+```
+resources/views/home.temp.php
+```
+
+ The worker transpiles these templates into generated PHP files under:
 
 ```
 storage/views/
 ```
 
- This separates template source from generated output.
+ and maintains the compiled-view mapping in:
+
+```
+storage/views.json
+```
+
+ The template language is implemented by Coretex's template system.
+
+ OwnWork therefore separates:
+
+```
+resources/views/
+        │
+        │ source templates
+        ▼
+   transpilation
+        │
+        ▼
+storage/views/
+        │
+        │ generated PHP
+        ▼
+      output
+```
+
+ Generated files in `storage/views/` are build output and should not be edited as the source of a view.
 
  ## Helpers
 
- Framework/application helper functions are loaded from:
+ OwnWork's predefined helper functions are located in:
 
 ```
 bundle/Helper.php
 ```
 
- Examples include:
+ The helper file provides functions including:
 
-```
+```php
+<?php
+
 approot();
 ```
 
-```
+```php
+<?php
+
 env("APP_NAME");
 ```
 
-```
-view("home.php");
+```php
+<?php
+
+view("home.temp.php");
 ```
 
-```
+```php
+<?php
+
 comp("button.php");
 ```
 
-```
+```php
+<?php
+
 out($value);
 ```
 
- These functions provide convenient access to common application operations without requiring an object to be manually instantiated.
+ It also provides additional helpers such as `getTempTranspiled()`, `url()`, `pre()`, `get_db_instance()`, `clean()`, `isArrElemEmpty()`, `separateEmptyElements()`, `printArr()`, and `isUrl()`.
+
+ For example, `view()` delegates to Coretex's `View::instantView()`, while `getTempTranspiled()` delegates to Coretex's `View::includeTemp()`.
+
+ The helper layer is therefore an OwnWork convenience layer around application and Coretex functionality.
 
  ## Worker
 
- The `worker` script provides development and code-generation commands.
+ The `worker` script provides OwnWork's command-line development and code-generation functionality.
 
  It can:
 
@@ -356,7 +578,7 @@ out($value);
 - generate services
 - generate views
 - transpile templates
-- clear compiled view files
+- clear generated view files
 
  For example:
 
@@ -364,55 +586,97 @@ out($value);
 php worker make controller UserController
 ```
 
- The worker uses templates stored in:
+ Generated application components use templates stored under:
 
 ```
 resources/template/
 ```
 
+ The worker is also responsible for the development view-transpilation workflow.
+
  ## Coretex Dependency
 
- OwnWork delegates several low-level framework responsibilities to:
+ OwnWork depends on:
 
 ```
 dhruv125/coretex
 ```
 
- Coretex provides functionality used by OwnWork for areas such as:
+ Coretex currently provides several lower-level pieces used directly by OwnWork.
 
- - HTTP requests
-- HTTP responses
-- routing
-- route resolution
-- views
-- template compilation
-- environment handling
-- error handling
+ ### HTTP
 
- This means the OwnWork architecture is best understood as two layers:
+ OwnWork's kernel uses Coretex:
 
 ```
-OwnWork
-├── Application bootstrap
-├── Kernel
-├── Application structure
-├── Helpers
-├── Worker
-└── Framework integration
-        │
-        ▼
-    Coretex
-    ├── Request
-    ├── Response
-    ├── Router
-    ├── Route resolver
-    ├── View system
-    ├── Template engine
-    ├── Environment
-    └── Error handling
+Dhruv125\Coretex\Support\Request
+Dhruv125\Coretex\Support\Response
 ```
 
- Understanding this separation is useful when reading the source code or debugging framework behavior.
+ ### Routing
+
+ OwnWork's kernel uses:
+
+```
+Dhruv125\Coretex\Router\Route
+Dhruv125\Coretex\Router\RouteResolver
+```
+
+ ### View System
+
+ OwnWork's helper layer delegates view operations to:
+
+```
+Dhruv125\Coretex\Viewer\View
+```
+
+ ### Environment
+
+ OwnWork's `Bundler` creates:
+
+```
+Dhruv125\Coretex\Environment\Environment
+```
+
+ to load the application's `.env` configuration.
+
+ ### Error Handling
+
+ OwnWork's `Bundler` creates:
+
+```
+Dhruv125\Coretex\Handler\GlobalErrorHandler
+```
+
+ for global PHP error and exception handling.
+
+ This distinction is important:
+
+ > **OwnWork integrates these Coretex components into its application lifecycle; they are not all implemented inside the OwnWork repository itself.**
+
+ When investigating framework behavior, check the OwnWork source first for application-specific orchestration, then check Coretex when the relevant class is imported from `Dhruv125\Coretex`.
+
+ ## OwnWork and Coretex Responsibilities
+
+ The separation can be summarized as:
+
+ | Responsibility | OwnWork | Coretex |
+| --- | --- | --- |
+| Application entry point | ✓ |  |
+| Bundler | ✓ |  |
+| HTTP Kernel | ✓ |  |
+| Application directory conventions | ✓ |  |
+| Worker CLI | ✓ |  |
+| Application helpers | ✓ |  |
+| Request object |  | ✓ |
+| Response object |  | ✓ |
+| Route registration/matching |  | ✓ |
+| Route resolution |  | ✓ |
+| View implementation |  | ✓ |
+| Environment loading |  | ✓ |
+| Global error handler |  | ✓ |
+
+This separation is important when reading the source or debugging behavior.
 
  ## Application Responsibilities
 
@@ -420,18 +684,76 @@ OwnWork
 
  A typical application can organize responsibilities like this:
 
-| Layer | Responsibility |
+ | Layer | Responsibility |
 | --- | --- |
-| `public/` | HTTP entry point and public assets |
-| `bundle/` | Bootstrap, routes, helpers |
-| `app/Controller/` | HTTP/application orchestration |
+| `public/` | HTTP entry point and public files |
+| `bundle/` | Bootstrap, routes, and helpers |
+| `app/Http/` | OwnWork HTTP kernel |
+| `app/Controller/` | Application request handling |
 | `app/Middleware/` | Request pipeline behavior |
 | `app/Model/` | Application data layer |
 | `app/Service/` | Reusable application logic |
-| `resources/views/` | Presentation |
+| `resources/views/` | View source templates |
 | `resources/template/` | Worker generation templates |
-| `storage/views/` | Compiled template output |
+| `storage/views/` | Generated view output |
 
-The framework provides the plumbing while application code defines the application's behavior.
+The framework provides the application plumbing while application code defines the application's behavior.
 
-> next: `fundamentals/project-structure.md`
+ ## Request Lifecycle Summary
+
+ The complete lifecycle can be summarized as:
+
+```
+HTTP Request
+     │
+     ▼
+public/index.php
+     │
+     ▼
+Bundler
+     │
+     ├── Load Composer
+     ├── Load .env through Coretex
+     └── Initialize Coretex error handler
+     │
+     ▼
+Kernel
+     │
+     ├── Create Request
+     ├── Create Response
+     ├── Create Route
+     └── Create RouteResolver
+     │
+     ▼
+bundle/Routes.php
+     │
+     ▼
+Route::end()
+     │
+     ├── Match HTTP method
+     ├── Match URL
+     └── Extract dynamic parameters
+     │
+     ▼
+Middleware Pipeline
+     │
+     ├── Global middleware
+     └── Route middleware
+     │
+     ▼
+RouteResolver
+     │
+     ├── Callable
+     ├── View
+     └── Controller
+     │
+     ▼
+Response
+     │
+     ▼
+HTTP Output
+```
+
+ The key architectural boundary is that **OwnWork controls the application lifecycle and orchestration, while Coretex supplies several of the lower-level HTTP framework primitives.**
+
+> `fundamentals/project-structure.md`

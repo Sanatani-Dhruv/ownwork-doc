@@ -1,16 +1,16 @@
 # Templating
 
- OwnWork provides a PHP-based templating system for application views. Templates use the `.temp.php` extension and are stored in `resources/views/`.
-
- ## Template Files
-
- Create templates inside:
+ OwnWork provides a PHP-based templating system for application views. Templates use the `.temp.php` extension and are stored in:
 
 ```
 resources/views/
 ```
 
- For example:
+ ## Template Files
+
+ Templates are application source files under `resources/views/`.
+
+ A project can organize templates into directories:
 
 ```
 resources/views/
@@ -24,13 +24,13 @@ resources/views/
 
  ## Rendering a View
 
- Render a template using the `view()` helper:
+ Use the `view()` helper:
 
 ```
 return view("home.temp.php");
 ```
 
- A nested view can be rendered using its relative path:
+ Nested templates use their path relative to `resources/views/`:
 
 ```
 return view("users/index.temp.php");
@@ -38,7 +38,7 @@ return view("users/index.temp.php");
 
  ## Passing Data
 
- Pass data to a view as the second argument:
+ Pass view data as the second argument:
 
 ```
 return view("users/index.temp.php", [
@@ -47,7 +47,7 @@ return view("users/index.temp.php", [
 ]);
 ```
 
- The values are available inside the template:
+ The supplied values are available to the template:
 
 ```
 <h1>{{ $title }}</h1>
@@ -67,14 +67,12 @@ return view("users/index.temp.php", [
 
  for escaped output.
 
- Example:
+ Values passed through `{{ }}` are processed with `htmlspecialchars()`.
 
 ```
 <h1>{{ $title }}</h1>
 <p>{{ $message }}</p>
 ```
-
- Values using `{{ }}` are passed through `htmlspecialchars()`.
 
  ## Raw Output
 
@@ -84,19 +82,17 @@ return view("users/index.temp.php", [
 {!{ $value }!}
 ```
 
- for raw output.
-
- Example:
+ for raw output:
 
 ```
 {!{ $html }!}
 ```
 
- Raw output should only be used when the value is already trusted or intentionally contains HTML.
+ Raw output should only be used for trusted or intentionally HTML-formatted content.
 
  ## PHP Blocks
 
- Use `@php` to start a PHP block:
+ Templates can contain PHP blocks using `@php`:
 
 ```
 @php
@@ -104,7 +100,7 @@ $name = "OwnWork";
 @endphp;
 ```
 
- The variables can then be used in the template:
+ The resulting variable can be used by the template:
 
 ```
 <h1>{{ $name }}</h1>
@@ -164,8 +160,6 @@ $name = "OwnWork";
 
  ## While Loops
 
- Use:
-
 ```
 @while($condition):
     <p>Processing...</p>
@@ -173,8 +167,6 @@ $name = "OwnWork";
 ```
 
  ## Do-While Loops
-
- Use:
 
 ```
 @dowhile:
@@ -184,7 +176,7 @@ $name = "OwnWork";
 
  ## Switch Statements
 
- Use `@switch` with `@case` and `@default`:
+ The template syntax supports `@switch`, `@fcase`, `@case`, and `@default`:
 
 ```
 @switch($status):>
@@ -197,10 +189,12 @@ $name = "OwnWork";
 @endswitch;
 ```
 
- For a specifying first case of switch statement, use `@fcase`:
- Switch uses unusual end sequence of characters `):>`, because php doesn't allow any html before first case of switch, so we use `):>` to not end the sequence and `$fcase` to handle first case of switch statement:
+ `@fcase` is used for the first case of a switch.
 
- Another Example:
+ The `):>` syntax on `@switch` is intentional. It allows the transpiler to preserve the PHP switch structure before the first case is encountered.
+
+ For example:
+
 ```
 @switch($value):>
     @fcase("one"):
@@ -212,75 +206,81 @@ $name = "OwnWork";
 
  ## Includes
 
- Include another view from `resources/views/`:
+ Include a view relative to `resources/views/`:
 
 ```
-@include("header.php")
+@include("header.php")@
 ```
 
- Include a view only once:
+ Include only once:
 
 ```
-@include_once("header.php")
+@include_once("header.php")@
 ```
 
  Require a view:
 
 ```
-@require("header.php")
+@require("header.php")@
 ```
 
- Require a view only once:
+ Require only once:
 
 ```
-@require_once("header.php")
+@require_once("header.php")@
 ```
 
  ## Root Includes
 
- Use `@includeRoot` when the file is relative to the application root:
+ Use `@includeRoot` for files relative to the application root:
 
 ```
-@includeRoot("config/example.php")
+@includeRoot("config/example.php")@
 ```
 
- Similarly:
+ The corresponding require form is:
 
 ```
-@requireRoot("config/example.php")
+@requireRoot("config/example.php")@
 ```
+
+ These differ from normal view includes because they resolve from the application root rather than the application's view directory.
 
  ## Transpiled Template Includes
 
- Use `@@includeTemp()` to include another transpiled template:
+ Use `@@includeTemp()@@` to include another transpiled template:
 
 ```
-@@includeTemp("header.temp.php")
+@@includeTemp("header.temp.php")@@
 ```
 
- This is intended for templates that participate in OwnWork's view compilation system.
+ This is intended for `.temp.php` files participating in the OwnWork template compilation process.
 
  ## Components
 
- Use `@comp()` to render a component:
+ Templates can render components using `@comp()`:
 
 ```
-@comp("button")
+@comp("button")@
 ```
 
- Arguments can be passed to the component:
+ Component data can be supplied as the second argument:
 
 ```
 @comp("button", [
     "text" => "Save"
-])
+])@
 ```
 
- See Components.
+ Components are documented separately in:
+
+```
+views/components.md
+```
 
  ## Template Comments
 
- Use:
+ Template comments use:
 
 ```
 {{--
@@ -288,25 +288,25 @@ $name = "OwnWork";
 --}}
 ```
 
- for template comments.
+ They are removed from the rendered template output.
 
  ## Template Compilation
 
- OwnWork compiles `.temp.php` templates before they are rendered.
+ `.temp.php` files are transpiled before execution.
 
- Source templates:
+ The source templates are located under:
 
 ```
 resources/views/
 ```
 
- Compiled templates:
+ Compiled representations are stored under:
 
 ```
 storage/views/
 ```
 
- Run the transpiler with:
+ The transpiler can be run with:
 
 ```
 php worker transpile
@@ -320,13 +320,13 @@ composer run transpile
 
  ## Development
 
- When developing templates, run the development server:
+ During template development, the application can be served with:
 
 ```
 php worker serve
 ```
 
- and the template transpiler:
+ Templates can be transpiled with:
 
 ```
 php worker transpile
@@ -346,7 +346,7 @@ composer run transpile
 
  ## Recommended Structure
 
- Keep application logic outside templates.
+ Keep application and persistence logic outside templates.
 
  A typical flow is:
 
@@ -362,9 +362,10 @@ View
 HTML Response
 ```
 
- For example:
+ For example, the controller prepares the data:
 
-```
+```php
+<?php
 public function index(
     Request $request,
     Response $response
@@ -377,9 +378,9 @@ public function index(
 }
 ```
 
- Then the template focuses on displaying the data:
+ The template is then concerned primarily with presentation:
 
-```
+```blade - temp.php
 <h1>Users</h1>
 
 @foreach($users as $user):
@@ -397,12 +398,13 @@ public function index(
 | Raw output | `{!{ $value }!}` |
 | Comment | `{{-- ... --}}` |
 | PHP block | `@php ... @endphp;` |
-| Include | `@include(...)@` |
-| Include once | `@include_once(...)@` |
-| Root include | `@includeRoot(...)@` |
-| Require | `@require(...)@` |
-| Root require | `@requireRoot(...)@` |
-| Transpiled include | `@@includeTemp(...)@@` |
+| Include | `@include(...)` |
+| Include once | `@include_once(...)` |
+| Root include | `@includeRoot(...)` |
+| Require | `@require(...)` |
+| Require once | `@require_once(...)` |
+| Root require | `@requireRoot(...)` |
+| Transpiled include | `@@includeTemp(...)` |
 | Component | `@comp(...)` |
 | If | `@if(...)` |
 | Else | `@else:` |
@@ -417,8 +419,8 @@ public function index(
 | Do-while | `@dowhile:` / `@enddowhile(...);` |
 | Switch | `@switch(...):>` |
 | First case | `@fcase(...)` |
-| Normal Cases | `@case(...)` |
+| Case | `@case(...)` |
 | Default | `@default:` |
 | End switch | `@endswitch;` |
 
-> next: `views/components.md`
+> `views/components.md`

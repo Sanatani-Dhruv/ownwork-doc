@@ -1,12 +1,6 @@
 # Environment Configuration
 
-OwnWork reads application configuration from environment variables.
-
-Environment values are accessed through the framework's environment helper:
-
-```php
-env("KEY")
-````
+ OwnWork provides environment configuration through environment variables and the `env()` helper.
 
  ## `.env`
 
@@ -18,7 +12,7 @@ APP_DEBUG=true
 APP_URL=http://localhost:8000
 ```
 
- Environment variables can then be accessed from application code.
+ Environment values can then be accessed from application code:
 
 ```
 $environment = env("APP_ENV");
@@ -52,20 +46,18 @@ env("APP_NAME")
 
  returns the configured value.
 
- ## Common Environment Values
+ ## Environment Values
 
- A typical application may define values such as:
+ Applications can define their own environment variables.
+
+ For example:
 
 ```
 APP_NAME=OwnWork
 APP_ENV=development
 APP_DEBUG=true
 APP_URL=http://localhost:8000
-```
 
- Database or external-service configuration can also be stored in environment variables:
-
-```
 DB_HOST=localhost
 DB_PORT=3306
 DB_DATABASE=ownwork
@@ -73,11 +65,13 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
- The names used by an application are determined by the application's configuration and code.
+ The variable names are application-defined.
 
- ## Environment Variables in Configuration
+ OwnWork does not require a particular database configuration format.
 
- Environment values can be used when defining application configuration:
+ ## Configuration by Environment
+
+ Environment variables can be used while building application configuration:
 
 ```
 $config = [
@@ -93,7 +87,7 @@ $config = [
 
  ## Development and Production
 
- Use different environment values for different environments.
+ Different environments can use different `.env` values.
 
  Development:
 
@@ -109,13 +103,11 @@ APP_ENV=production
 APP_DEBUG=false
 ```
 
- Do not place production secrets directly in source-controlled PHP files.
+ Application secrets should not be committed to source control.
 
  ## Secrets
 
- Sensitive values such as passwords, API keys, and credentials should be supplied through environment configuration.
-
- Example:
+ Credentials and other sensitive configuration can be supplied through environment variables:
 
 ```
 API_KEY=your-secret-key
@@ -129,25 +121,33 @@ $apiKey = env("API_KEY");
 $dbPassword = env("DB_PASSWORD");
 ```
 
- Do not commit secrets to the application's source repository.
+ Keep sensitive environment files outside version control where appropriate.
 
- ## Application Root
+ ## Environment and Application Paths
 
- OwnWork uses:
+ Environment configuration should not be confused with application-relative paths.
+
+ Use:
 
 ```
-approot()
+env("APP_URL");
 ```
 
- to resolve paths relative to the application root.
+ for configurable environment values.
+
+ Use:
+
+```
+approot();
+```
+
+ for resolving paths relative to the application root.
 
  For example:
 
 ```
-$path = approot() . "/resources/views/";
+$views = approot() . "/resources/views/";
 ```
-
- Environment configuration and application paths should be kept separate: use environment variables for configurable values and `approot()` for project-relative paths.
 
  ## Example
 
@@ -169,6 +169,6 @@ $debug = env("APP_DEBUG");
 $url = env("APP_URL");
 ```
 
- These values can then be used by the application without changing the source code between environments.
+ This allows environment-specific configuration without changing application source code.
 
-> next: `configuration/helpers.md`
+ > next: `configuration/helpers.md`

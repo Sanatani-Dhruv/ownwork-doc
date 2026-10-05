@@ -5,6 +5,7 @@ OwnWork supports dynamic URL segments through the Coretex router.
 A dynamic parameter is written inside a route using `{name}` syntax:
 
 ```php
+<?php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -19,7 +20,8 @@ GET /users/42
 
  the router matches the route and extracts:
 
-```
+```php
+<?php
 [
     "id" => "42"
 ]
@@ -29,7 +31,8 @@ GET /users/42
 
  Use curly braces around the parameter name:
 
-```
+```php
+<?php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -44,7 +47,8 @@ $route->get("/users/{id}", [
 
  A route can contain more than one dynamic parameter:
 
-```
+```php
+<?php
 $route->get("/users/{id}/posts/{post}", [
     UserController::class,
     "showPost"
@@ -59,7 +63,8 @@ $route->get("/users/{id}/posts/{post}", [
 
  produces:
 
-```
+```php
+<?php
 [
     "id" => "42",
     "post" => "7"
@@ -138,7 +143,8 @@ $route->get("/users/{id}/posts/{post}", [
 
  can match:
 
-```
+```php
+<?php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -159,7 +165,8 @@ $route->get("/users/{id}", [
 
  the extracted value is:
 
-```
+```php
+<?php
 [
     "id" => "42"
 ]
@@ -169,7 +176,8 @@ $route->get("/users/{id}", [
 
  If an application requires a numeric value, it should perform its own validation or conversion:
 
-```
+```php
+<?php
 $id = (int) $params["id"];
 ```
 
@@ -179,13 +187,15 @@ $id = (int) $params["id"];
 
  Use:
 
-```
+```php
+<?php
 $params = $request->getAttribute("dynamicParams");
 ```
 
  For:
 
-```
+```php
+<?php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -200,7 +210,8 @@ $route->get("/users/{id}", [
 
  the controller can access:
 
-```
+```php
+<?php
 $params = $request->getAttribute("dynamicParams");
 
 $id = $params["id"];
@@ -237,7 +248,8 @@ class UserController
 
  With:
 
-```
+```php
+<?php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -252,7 +264,8 @@ $route->get("/users/{id}", [
 
  can produce:
 
-```
+```php
+<?php
 {
     "id": "42"
 }
@@ -262,7 +275,8 @@ $route->get("/users/{id}", [
 
  Given:
 
-```
+```php
+<?php
 $route->get(
     "/users/{user}/posts/{post}",
     [
@@ -274,7 +288,8 @@ $route->get(
 
  the controller can retrieve both values:
 
-```
+```php
+<?php
 $params = $request->getAttribute("dynamicParams");
 
 $userId = $params["user"];
@@ -289,7 +304,8 @@ $postId = $params["post"];
 
  the values are:
 
-```
+```php
+<?php
 [
     "user" => "42",
     "post" => "7"
@@ -302,7 +318,8 @@ $postId = $params["post"];
 
  For:
 
-```
+```php
+<?php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -311,7 +328,8 @@ $route->get("/users/{id}", [
 
  a successful match contains information equivalent to:
 
-```
+```php
+<?php
 [
     "params" => [
         "id" => "42"
@@ -328,13 +346,15 @@ $route->get("/users/{id}", [
 
  For example:
 
-```
+```php
+<?php
 $route->get("/products/{productId}", $handler);
 ```
 
  produces:
 
-```
+```php
+<?php
 [
     "productId" => "123"
 ]
@@ -344,7 +364,8 @@ $route->get("/products/{productId}", $handler);
 
  Use the exact name defined in the route:
 
-```
+```php
+<?php
 $params["productId"];
 ```
 
@@ -354,7 +375,8 @@ $params["productId"];
 
  For:
 
-```
+```php
+<?php
 $route->get(
     "/categories/{category}/products/{product}",
     $handler
@@ -371,7 +393,8 @@ $route->get(
 
  the resulting parameters are:
 
-```
+```php
+<?php
 [
     "category" => "books",
     "product" => "42"
@@ -384,7 +407,8 @@ $route->get(
 
  For example:
 
-```
+```php
+<?php
 $route->get(
     "/users/{id}/profile",
     [
@@ -440,7 +464,8 @@ $route->get(
 
  If both forms are required, register separate routes:
 
-```
+```php
+<?php
 $route->get("/users", [
     UserController::class,
     "index"
@@ -468,7 +493,8 @@ $route->get("/users/{id}", [
 
  For example:
 
-```
+```php
+<?php
 $params = $request->getAttribute("dynamicParams");
 
 $id = $params["id"];
@@ -492,7 +518,8 @@ if (!ctype_digit($id)) {
 
  The application must perform that lookup itself:
 
-```
+```php
+<?php
 $params = $request->getAttribute("dynamicParams");
 
 $id = $params["id"];
@@ -506,7 +533,8 @@ $id = $params["id"];
 
  Internally, `Route::end()` returns the extracted dynamic parameters as `params`:
 
-```
+```php
+<?php
 [
     "middlewares" => [...],
     "handler" => ...,
@@ -524,7 +552,8 @@ $id = $params["id"];
 
  Route:
 
-```
+```php
+<?php
 $route->get(
     "/users/{id}/profile",
     [
@@ -548,7 +577,8 @@ GET /users/42/profile
 
  Parameters:
 
-```
+```php
+<?php
 [
     "id" => "42"
 ]
@@ -556,7 +586,8 @@ GET /users/42/profile
 
  Controller:
 
-```
+```php
+<?php
 public function profile(
     Request $request,
     Response $response
@@ -571,4 +602,4 @@ public function profile(
 
  The router is responsible only for matching and extracting the value. What the application does with that value is the responsibility of the controller/service/model layer.
 
-> next: `routing/middleware.md`
+> `routing/middleware.md`

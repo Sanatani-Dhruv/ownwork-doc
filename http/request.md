@@ -42,7 +42,7 @@ $value = $request->getAttribute(
 );
 ```
 
- The underlying request object follows the PSR-7 request attribute model.  GitHub
+ The underlying request object follows the PSR-7 request attribute model.
 
  ## Route Parameters
 
@@ -294,7 +294,7 @@ $value = $request->getAttribute(
 );
 ```
 
- The underlying PSR-7 request interface defines `getAttributes()` and `getAttribute()` for derived request information.  GitHub
+ The underlying PSR-7 request interface defines `getAttributes()` and `getAttribute()` for derived request information.
 
  ## Adding Request Attributes
 
@@ -335,7 +335,7 @@ withoutAttribute()
 withParsedBody()
 ```
 
- return an updated request instance rather than modifying the original PSR-7 message in place.  GitHub
+ return an updated request instance rather than modifying the original PSR-7 message in place.
 
  When using these methods, keep the returned instance:
 

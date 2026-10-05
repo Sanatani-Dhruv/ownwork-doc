@@ -1,8 +1,8 @@
 # Request Lifecycle
 
-OwnWork processes an HTTP request through a small sequence of bootstrap, routing, middleware, handler resolution, and response steps.
+OwnWork processes an HTTP request through application bootstrap, route registration, route matching, middleware execution, handler resolution, and response dispatch.
 
-Understanding this lifecycle helps when working with routes, controllers, middleware, views, and error handling.
+Some of the HTTP and routing primitives used during this process are provided by the `dhruv125/coretex` dependency.
 
 ## Overview
 
@@ -17,32 +17,43 @@ public/index.php
      ▼
 Bundler
      │
+     ├── Check .env and Composer autoloader
      ├── Load Composer
      ├── Load environment
-     └── Configure error handling
+     └── Configure global error handler
      │
      ▼
 Kernel
      │
      ├── Create Request
      ├── Create Response
-     ├── Create Router
-     └── Register Routes
+     ├── Create Route
+     ├── Create RouteResolver
+     └── Create Pager
+     │
+     ▼
+bundle/Routes.php
      │
      ▼
 Route Matching
      │
-     ▼
-Route Resolution
+     ├── Handler
+     ├── Dynamic parameters
+     ├── Route information
+     └── Middleware
      │
      ▼
 Middleware Pipeline
      │
      ▼
-Controller / Closure / View
+RouteResolver
+     │
+     ├── Closure
+     ├── View
+     └── Controller
      │
      ▼
-Response
+Response / String
      │
      ▼
 HTTP Output
@@ -79,31 +90,57 @@ $app = new Bundler();
 $app->bundle();
 ```
 
- The front controller does not define routes or process individual requests itself.
+ The front controller does not define routes or process individual requests.
 
- Its responsibility is to start the application.
+ Its responsibility is to start the OwnWork application.
 
  ## 3\. Application Bootstrap
 
- `bundle/Bundler.php` performs the application bootstrap.
+ The bundler is located at:
 
- The bootstrap includes:
+```
+bundle/Bundler.php
+```
 
- - checking that the application has been set up
-- loading Composer's autoloader
-- loading environment configuration
-- configuring the error handler
-- creating the application kernel
-- starting request handling
+ Before the kernel is started, the bundler checks that both of the following exist:
+
+```
+.env
+vendor/autoload.php
+```
+
+ If either is missing, OwnWork stops and displays a setup message instructing the developer to run:
+
+```
+composer run setup
+```
+
+ When the required files exist, the bundler loads Composer:
+
+```
+vendor/autoload.php
+```
+
+ It then creates Coretex's environment handler and loads the application's environment configuration.
+
+ The environment loader returns an error level which is passed to Coretex's global error handler.
 
  Conceptually:
 
 ```
 Bundler
    │
+   ├── Check setup
+   ├── Composer autoloader
    ├── Environment
-   ├── Error handling
+   ├── Global error handler
    └── Kernel
+```
+
+ The relevant bootstrap code is contained in:
+
+```
+bundle/Bundler.php
 ```
 
  ## 4\. Kernel Initialization
@@ -114,148 +151,148 @@ Bundler
 app/Http/Kernel.php
 ```
 
- The kernel is responsible for coordinating request processing.
+ When the kernel is constructed, OwnWork creates:
 
- It creates the main HTTP and routing objects used by the application, including:
+ - Coretex `Request`
+- Coretex `Response`
+- Coretex `Route`
+- Coretex `RouteResolver`
+- Coretex `Pager`
 
- - `Request`
-- `Response`
-- `Route`
-- `RouteResolver`
-- `Pager`
-
- The exact implementation of the lower-level request, response, routing, and view functionality comes from Coretex.
-
- ## 5\. Request Creation
-
- The Coretex `Request` object represents the incoming HTTP request.
-
- It provides access to information such as:
-
- - HTTP method
-- GET parameters
-- POST parameters
-- request parameters
-- cookies
-- uploaded files
-- server variables
-- HTTP headers
-- request attributes
-
- The kernel uses the current PHP request environment to create the request object.
-
- ## 6\. Response Creation
-
- The kernel also creates a Coretex `Response` object.
-
- The response represents the data that will eventually be sent back to the client.
-
- It can contain:
-
- - HTTP status code
-- headers
-- response body
-
- For example:
+ Conceptually:
 
 ```
-$response->html("<h1>Hello</h1>");
+Kernel
+   │
+   ├── Request
+   ├── Response
+   ├── Route
+   ├── RouteResolver
+   └── Pager
 ```
 
- or:
+ The kernel is responsible for coordinating the application's request processing.
 
-```
-$response->json([
-    "message" => "Hello"
-]);
-```
+ ## 5\. Route Registration
 
- ## 7\. Route Registration
-
- The kernel loads:
+ When `Kernel::handle()` runs, it loads:
 
 ```
 bundle/Routes.php
 ```
 
- This file contains the application's route definitions.
-
  For example:
 
-```
-$route->get("/", "home.temp.php");
+```php
+<?php
 
-$route->get("/users", [
+$route->get("/", "main.temp.php");
+
+$route->get("/id/{id}/{name}", [
     UserController::class,
     "index"
 ]);
 ```
 
- The routes are registered with the router before the current request is resolved.
+ The `$route` object is created by the kernel and is available while the routes file is loaded.
 
- ## 8\. Route Matching
+ The routes are therefore registered before the current request is resolved.
 
- The router compares the incoming request against the registered routes.
+ ## 6\. Route Matching
 
- A route contains at least:
+ After loading the route definitions, the kernel calls the route object's matching process.
 
- - an HTTP method
-- a URL pattern
-- a handler
+ The router determines the matching handler and collects information about the current request.
+
+ For example, a route such as:
+
+```
+/id/{id}/{name}
+```
+
+ can match:
+
+```
+/id/42/dhruv
+```
+
+ The resulting dynamic parameters are stored by the kernel.
+
+ Conceptually:
+
+```
+{
+    "id": "42",
+    "name": "dhruv"
+}
+```
+
+ If no handler is found, the kernel throws a Coretex `PageNotFoundException`.
+
+ The kernel catches that exception and returns the framework's not-found page with HTTP status:
+
+```
+404
+```
+
+ ## 7\. Request Attributes
+
+ OwnWork stores routing information on the Coretex `Request` object.
+
+ The kernel sets these attributes:
+
+```
+currentRoute
+routesArray
+dynamicParams
+```
 
  For example:
 
-```
-$route->get("/users/{id}", [
-    UserController::class,
-    "show"
-]);
-```
+```php
+<?php
 
- A request such as:
-
-```
-GET /users/42
-```
-
- can match the route.
-
- The router extracts dynamic route values and makes them available to the request processing layer.
-
- For the example above, the dynamic parameters are conceptually:
-
-```
-[
-    "id" => "42"
-]
-```
-
- ## 9\. Route Information
-
- OwnWork stores routing information in request attributes.
-
- For example:
-
-```
 $currentRoute = $request->getAttribute("currentRoute");
-```
 
- Dynamic route parameters can be accessed through:
-
-```
 $params = $request->getAttribute("dynamicParams");
 ```
 
- A controller can therefore access route parameters through the request object without directly interacting with the router.
+ Dynamic route parameters therefore become available to application code through the request object.
 
- ## 10\. Middleware Pipeline
+ ## 8\. Middleware Pipeline
 
- After route matching, middleware can be executed before the final route handler.
+ After route matching, OwnWork executes the middleware associated with the matched route.
 
- A middleware follows the general structure:
+ Global middleware registered on the route object is also added to the middleware pipeline.
+
+ The kernel executes middleware recursively.
+
+ Conceptually:
 
 ```
-public static function handle(
+Request
+   │
+   ▼
+Global Middleware
+   │
+   ▼
+Route Middleware
+   │
+   ▼
+Next Middleware
+   │
+   ▼
+Route Handler
+```
+
+ A middleware receives the request, response, and a callback used to continue execution.
+
+ For example:
+
+```php
+<?php
+
+function (
     Request $request,
     Response $response,
     callable $next
@@ -264,46 +301,33 @@ public static function handle(
 }
 ```
 
- Middleware can inspect the request:
+ A middleware can terminate the request instead of calling `$next()`.
 
-```
+ For example:
+
+```php
+<?php
+
 if (!$request->has("token")) {
-    // terminate the request
+    return "Unauthorized";
 }
-```
 
- or continue execution:
-
-```
 return $next();
 ```
 
- Conceptually:
+ If `$next()` is called, execution continues through the remaining middleware until the route handler is reached.
 
-```
-Request
-   │
-   ▼
-Middleware A
-   │
-   ▼
-Middleware B
-   │
-   ▼
-Route Handler
-```
+ ## 9\. Route Handler Resolution
 
- If middleware returns a response without calling `$next()`, downstream handlers are not executed through that middleware path.
+ After middleware completes, the kernel passes the route handler to Coretex's `RouteResolver`.
 
- ## 11\. Handler Resolution
-
- Once the middleware pipeline reaches the route handler, Coretex resolves the registered handler.
-
- OwnWork supports handlers such as closures, view names, and controller actions.
+ OwnWork supports handler forms such as:
 
  ### Closure
 
-```
+```php
+<?php
+
 $route->get("/hello", function () {
     return "Hello";
 });
@@ -311,37 +335,45 @@ $route->get("/hello", function () {
 
  ### View
 
-```
-$route->get("/", "home.temp.php");
+```php
+<?php
+
+$route->get("/", "main.temp.php");
 ```
 
  ### Controller
 
-```
+```php
+<?php
+
 $route->get("/users", [
     UserController::class,
     "index"
 ]);
 ```
 
- The route resolver determines how each handler should be invoked.
+ The `RouteResolver` determines how the registered handler should be executed.
 
- ## 12\. Controller Execution
+ ## 10\. Controller Execution
 
  For a controller route:
 
-```
+```php
+<?php
+
 $route->get("/users", [
     UserController::class,
     "index"
 ]);
 ```
 
- the resolver invokes the corresponding controller action.
+ the resolver invokes the specified controller action.
 
- A typical action receives:
+ A controller action commonly receives Coretex request and response objects:
 
-```
+```php
+<?php
+
 public function index(
     Request $request,
     Response $response
@@ -350,126 +382,174 @@ public function index(
 }
 ```
 
- The controller can then:
+ The controller can then read request information, access route parameters, call application services, work with models, render views, or return a response.
 
- - read request data
-- access route parameters
-- call services
-- work with application models
-- render a view
-- create a response
+ ## 11\. View Resolution
 
- ## 13\. View Rendering
+ A route can directly resolve to a view name:
 
- A controller can render a view using the global `view()` helper:
+```php
+<?php
 
+$route->get("/", "main.temp.php");
 ```
+
+ A controller can also use the global `view()` helper:
+
+```php
+<?php
+
 return view("users.temp.php");
 ```
 
- Data can be passed to the view:
+ Data can be supplied to the view:
 
-```
+```php
+<?php
+
 return view("users.temp.php", [
     "title" => "Users"
 ]);
 ```
 
- For `.temp.php` files, the template system processes the source template and executes the compiled PHP representation.
-
- Compiled view output is stored under:
+ For `.temp.php` templates, the Coretex template system handles compilation and the generated view files are stored under:
 
 ```
 storage/views/
 ```
 
- ## 14\. Response Generation
-
- A route handler can produce a response in several ways.
-
- For example, a controller can return a JSON response:
+ The mapping between source templates and compiled views is stored in:
 
 ```
+storage/views.json
+```
+
+ Template compilation itself is performed by the OwnWork/Coretex development tooling rather than during every normal request.
+
+ ## 12\. Handler Result
+
+ After the route resolver executes the handler, the kernel receives its result.
+
+ The current kernel explicitly handles two important result types.
+
+ A string is placed into the response body:
+
+```php
+<?php
+
+return "Hello from OwnWork";
+```
+
+ A Coretex `Response` object is dispatched directly.
+
+ For example:
+
+```php
+<?php
+
 return $response->json([
-    "message" => "Users"
+    "message" => "Hello"
 ]);
 ```
 
- Or an HTML response:
+ The exact response helpers are provided by Coretex.
 
-```
-return $response->html(
-    "<h1>Users</h1>"
-);
-```
+ ## 13\. Response Dispatch
 
- A rendered view can also become the response body.
+ When a route handler returns a string, the kernel places that string into its response and dispatches it.
 
- ## 15\. Response Dispatch
-
- Once request processing produces a `Response`, the kernel dispatches it.
-
- Dispatching sends the response's:
-
- - HTTP status
-- headers
-- body
-
- to PHP's HTTP output.
+ When a handler returns a Coretex `Response`, the kernel dispatches that response directly.
 
  Conceptually:
 
 ```
-Response
-   │
-   ├── Status
-   ├── Headers
-   └── Body
-        │
-        ▼
-    HTTP Output
+Route Handler
+     │
+     ▼
+Result
+     │
+     ├── String
+     │     ↓
+     │   Response body
+     │
+     └── Response
+           ↓
+       Response dispatch
 ```
 
- ## 16\. Error Handling
+ The response is then sent to the client.
 
- Errors can occur during any stage of request processing.
+ ## 14\. Error Handling
 
- OwnWork integrates Coretex error handling and catches framework-specific exceptions in the kernel.
+ OwnWork configures Coretex's global error handler during application bootstrap.
 
- Examples include:
+ The handler is created by:
+
+```
+bundle/Bundler.php
+```
+
+ using the environment-derived error level.
+
+ The kernel additionally handles specific framework exceptions.
+
+ A missing route results in:
 
 ```
 PageNotFoundException
+```
+
+ which is converted to:
+
+```
+HTTP 404
+```
+
+ and displayed through the Coretex `Pager`.
+
+ A missing view results in:
+
+```
 ViewNotFoundException
 ```
 
- When no matching page exists, the application produces a `404` response.
+ which is converted by the kernel into:
 
- When a requested view cannot be found, the framework handles the view exception and renders the corresponding error response.
+```
+HTTP 500
+```
 
- The global error handler can also handle PHP errors and uncaught exceptions.
+ and displayed using the framework's view-not-found error page.
+
+ The framework's error pages are located in:
+
+```
+resources/appviews/
+```
 
  ## Complete Example
 
  Consider this route:
 
-```
-$route->get("/users/{id}", [
+```php
+<?php
+
+$route->get("/id/{id}/{name}", [
     UserController::class,
-    "show"
+    "index"
 ]);
 ```
 
  and a request:
 
 ```
-GET /users/42
+GET /id/42/dhruv
 ```
 
- The lifecycle is:
+ The lifecycle is approximately:
 
 ```
-GET /users/42
+GET /id/42/dhruv
       │
       ▼
 public/index.php
@@ -477,31 +557,43 @@ public/index.php
       ▼
 Bundler
       │
+      ├── Load environment
+      └── Configure error handler
+      │
       ▼
 Kernel
       │
-      ▼
-Routes.php
+      ├── Request
+      ├── Response
+      ├── Route
+      └── RouteResolver
       │
       ▼
-Match /users/{id}
+bundle/Routes.php
       │
       ▼
-dynamicParams = [
-    "id" => "42"
-]
+Route matching
+      │
+      ▼
+dynamicParams
+      │
+      ├── id = 42
+      └── name = dhruv
       │
       ▼
 Middleware
       │
       ▼
-UserController::show()
+RouteResolver
       │
       ▼
-Response / View
+UserController::index()
       │
       ▼
-HTTP response
+Response / String
+      │
+      ▼
+HTTP output
 ```
 
  ## Where Each Responsibility Lives
@@ -512,12 +604,13 @@ HTTP response
 | Application bootstrap | `bundle/Bundler.php` |
 | Route definitions | `bundle/Routes.php` |
 | Request orchestration | `app/Http/Kernel.php` |
-| Middleware | `app/Middleware/` |
+| Middleware registration/execution | `app/Http/Kernel.php` and route configuration |
 | Controllers | `app/Controller/` |
 | Models | `app/Model/` |
 | Services | `app/Service/` |
 | Application views | `resources/views/` |
 | Compiled views | `storage/views/` |
+| Framework error pages | `resources/appviews/` |
 | HTTP/router primitives | Coretex |
 
 ## Framework Boundary
@@ -541,15 +634,17 @@ HTTP response
 ┌──────────────────────────────────────┐
 │ Request                              │
 │ Response                             │
-│ Router                               │
+│ Route                                │
 │ RouteResolver                        │
-│ View                                 │
-│ Template                             │
+│ Pager                                │
 │ Environment                          │
-│ Error handling                       │
+│ GlobalErrorHandler                   │
+│ View / Template system               │
 └──────────────────────────────────────┘
 ```
 
- This separation is important when investigating framework behavior: some APIs documented by OwnWork are implemented directly in the OwnWork repository, while others are provided by the Coretex dependency.
+ This distinction is important when reading the source or debugging behavior.
 
-> next: `routing/routes.md`
+ OwnWork's `Bundler` and `Kernel` coordinate the application, while several lower-level HTTP, routing, view, environment, and error-handling operations are implemented by Coretex.
+
+ > next: `routing/routes.md`

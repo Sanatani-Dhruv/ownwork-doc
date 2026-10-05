@@ -1,12 +1,12 @@
 # Controllers
 
-Controllers contain application-level request handlers.
+ Controllers contain application-level request handlers.
 
-In an OwnWork application, controllers are stored under:
+ In an OwnWork application, controllers are stored under:
 
-```text
+```
 app/Controller/
-````
+```
 
  A controller is normally connected to the application through a route declared in:
 
@@ -30,26 +30,40 @@ php worker make controller UserController
 app/Controller/UserController.php
 ```
 
- A controller belongs to the `App\Controller` namespace.
+ The generated controller uses the `App\Controller` namespace and includes an `index()` method that receives Coretex's `Request` and `Response` objects.
 
- A typical controller has the following structure:
+ The controller template currently used by OwnWork is:
 
 ```php
 <?php
 
+declare(strict_types = 1);
+
 namespace App\Controller;
+
+use Dhruv125\Coretex\Viewer\View;
+use Dhruv125\Coretex\Support\Request;
+use Dhruv125\Coretex\Support\Response;
 
 class UserController
 {
-    //
+    function __construct()
+    {
+        // Default Controller
+    }
+
+    public function index(Request $request, Response $response)
+    {
+        // ...
+    }
 }
 ```
 
- The controller itself does not need to extend a framework base controller.
+ The generated controller does not extend a framework base controller.
 
  ## Controller Actions
 
- A public method on a controller can be used as a route handler.
+ A public controller method can be registered as a route handler.
 
  For example:
 
@@ -69,7 +83,9 @@ class UserController
 
  Register the method in `bundle/Routes.php`:
 
-```
+```php
+<?php
+
 use App\Controller\UserController;
 
 $route->get("/users", [
@@ -90,9 +106,11 @@ GET /users
 UserController::index()
 ```
 
+ The controller method is invoked by Coretex's `RouteResolver`, which OwnWork creates in the HTTP kernel.
+
  ## Request and Response Arguments
 
- Controller methods can receive Coretex's request and response objects.
+ Controller methods can receive Coretex's request and response objects:
 
 ```php
 <?php
@@ -115,40 +133,41 @@ class UserController
 
  The `Request` object represents the incoming HTTP request.
 
- The `Response` object can be used to construct an HTTP response.
+ The `Response` object represents the HTTP response being constructed.
 
- See:
-
-- Request
-- Response
+ Because controller handlers are ultimately passed to Coretex's `RouteResolver`, the exact handler behavior is provided by Coretex rather than by a separate OwnWork controller base class.
 
  ## Returning a String
 
  A controller action can return a string:
 
-```
+```php
+<?php
+
 public function index()
 {
     return "Users";
 }
 ```
 
- The returned value becomes part of the HTTP response processing.
+ OwnWork's kernel detects a string returned from the middleware and route-handler pipeline and places it into the response body before dispatching the response.
 
- For simple responses, this can be sufficient.
+ For simple HTML or text responses, returning a string can therefore be sufficient.
 
  ## Returning a View
 
  Controllers can render application views through the global `view()` helper:
 
-```
+```php
+<?php
+
 public function index()
 {
     return view("users.temp.php");
 }
 ```
 
- The corresponding template is located under:
+ The corresponding application view is located under:
 
 ```
 resources/views/users.temp.php
@@ -160,11 +179,15 @@ resources/views/users.temp.php
 <h1>Users</h1>
 ```
 
+ The view system itself is provided through the Coretex dependency.
+
  ## Passing Data to a View
 
- The `view()` helper accepts data as its second argument:
+ The `view()` helper can receive data as its second argument:
 
-```
+```php
+<?php
+
 public function index()
 {
     return view("users.temp.php", [
@@ -173,19 +196,21 @@ public function index()
 }
 ```
 
- The value can then be used by the template:
+ The supplied values can then be used by the template:
 
 ```
 <h1>{{ $title }}</h1>
 ```
 
- The view system makes the supplied variables available when the template is rendered.
+ `.temp.php` templates are processed by OwnWork/Coretex's template system before the resulting PHP representation is executed.
 
  ## Returning JSON
 
  A controller can use the response object to produce JSON:
 
-```
+```php
+<?php
+
 public function index(
     Request $request,
     Response $response
@@ -198,7 +223,7 @@ public function index(
 
  This is useful for API-style routes.
 
- The response implementation is provided by Coretex.
+ The `Response` implementation is provided by Coretex.
 
  ## Dynamic Route Parameters
 
@@ -206,7 +231,9 @@ public function index(
 
  Define a route:
 
-```
+```php
+<?php
+
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -227,9 +254,13 @@ GET /users/42
 ]
 ```
 
- The parameters are available from the request's `dynamicParams` attribute:
+ OwnWork places these values in the request's `dynamicParams` attribute before executing middleware and the route handler.
 
-```
+ A controller can read them with:
+
+```php
+<?php
+
 public function show(
     Request $request,
     Response $response
@@ -244,6 +275,8 @@ public function show(
 }
 ```
 
+ The OwnWork kernel sets this request attribute from the `params` returned by the matched Coretex route.
+
  The router does not automatically load a model from the parameter.
 
  ## Multiple Route Parameters
@@ -252,7 +285,9 @@ public function show(
 
  Route:
 
-```
+```php
+<?php
+
 $route->get(
     "/users/{user}/posts/{post}",
     [
@@ -264,7 +299,9 @@ $route->get(
 
  Controller:
 
-```
+```php
+<?php
+
 public function post(
     Request $request,
     Response $response
@@ -281,20 +318,22 @@ public function post(
 }
 ```
 
+ The parameter names come directly from the route definition.
+
  ## Reading Request Data
 
  The request object should be used when controller logic needs information from the HTTP request.
 
  For example:
 
-```
+```php
+<?php
+
 public function store(
     Request $request,
     Response $response
 ) {
     $name = $request->get("name");
-
-    // Process the request.
 
     return $response->json([
         "name" => $name
@@ -302,7 +341,7 @@ public function store(
 }
 ```
 
- The exact request API is documented separately in Request.
+ The exact request API belongs to Coretex and should be consulted when working with request-specific functionality.
 
  ## Using Services
 
@@ -318,9 +357,11 @@ app/
     └── UserService.php
 ```
 
- The controller can create or use the service:
+ A controller can create or use a service:
 
-```
+```php
+<?php
+
 public function store(
     Request $request,
     Response $response
@@ -359,13 +400,13 @@ Service
 Model
 ```
 
- The exact model implementation depends on the application.
+ OwnWork provides the application directory and worker generation support for models, but it does not impose an ORM or database implementation.
 
- OwnWork does not provide an ORM through its controller layer.
+ The actual persistence layer is application-specific.
 
  ## Controller and Middleware
 
- Middleware executes around route handling.
+ Middleware executes before the final route handler and can surround its execution.
 
  For example:
 
@@ -381,7 +422,9 @@ Response
 
  Register middleware for a controller route:
 
-```
+```php
+<?php
+
 $route->get("/users", [
     UserController::class,
     "index"
@@ -394,9 +437,7 @@ $route->middleware(
 );
 ```
 
- Middleware should handle cross-cutting request concerns while the controller focuses on the application's operation.
-
- See Middleware.
+ The controller remains responsible for the application operation, while middleware handles concerns that should apply around request processing.
 
  ## Controller Naming
 
@@ -406,13 +447,13 @@ $route->middleware(
 php worker make controller UserController
 ```
 
- A conventional OwnWork controller therefore looks like:
+ A conventional controller therefore looks like:
 
 ```
 UserController.php
 ```
 
- and is stored as:
+ and is stored under:
 
 ```
 app/Controller/UserController.php
@@ -420,34 +461,44 @@ app/Controller/UserController.php
 
  The generated namespace is:
 
-```
+```php
+<?php
+
 namespace App\Controller;
 ```
 
  ## Controller Generation
 
- The worker's controller generator uses the project's controller template.
-
- The source template is located under:
+ The worker's controller generator uses the controller template under:
 
 ```
 resources/template/
 ```
 
- The worker generates the resulting PHP class in:
+ The current controller template provides:
+
+ - `declare(strict_types = 1);`
+- the `App\Controller` namespace
+- Coretex `Request` and `Response` imports
+- an empty constructor
+- an `index(Request $request, Response $response)` method
+
+ The generated file is written under:
 
 ```
 app/Controller/
 ```
 
- This means generated controllers can be used as starting points and then customized for the application's needs.
+ Developers can then modify the generated class for their application.
 
  ## Example Controller
 
- A small controller can combine routing parameters, request data, views, and responses:
+ A controller can combine request data, route parameters, views, and responses:
 
 ```php
 <?php
+
+declare(strict_types = 1);
 
 namespace App\Controller;
 
@@ -484,7 +535,9 @@ class UserController
 
  Routes:
 
-```
+```php
+<?php
+
 use App\Controller\UserController;
 
 $route->get("/users", [
@@ -498,7 +551,7 @@ $route->get("/users/{id}", [
 ]);
 ```
 
- The resulting structure is:
+ The request flow is:
 
 ```
 Request
@@ -521,11 +574,11 @@ Route
 
  ## What Controllers Are Responsible For
 
- A controller is a convenient boundary between HTTP routing and application operations.
+ A controller is a boundary between HTTP routing and application operations.
 
  Typical responsibilities include:
 
-- receiving the request
+ - receiving the request
 - reading request and route data
 - calling application services
 - coordinating model operations
@@ -534,20 +587,20 @@ Route
 
  Controllers should not be confused with the framework's HTTP kernel.
 
- The kernel coordinates the request lifecycle; controllers implement application-specific request handlers.
+ The kernel coordinates request processing, while controllers implement application-specific request handlers.
 
  ## What OwnWork Does Not Require
 
  OwnWork does not require controllers to:
 
-- extend a base controller class
+ - extend a base controller class
 - implement a controller interface
 - use a dependency-injection container
 - use a particular ORM
 - use a particular database
 - return only one response type
 
- A controller is ultimately a class whose callable method can be registered as a route handler.
+ A controller is an application class whose registered callable method is resolved by Coretex's route resolver.
 
  ## Controller Flow
 
@@ -560,6 +613,8 @@ Route
      ↓
 Middleware
      ↓
+RouteResolver
+     ↓
 Controller Action
      ↓
 Service / Model
@@ -569,6 +624,6 @@ View or Response
 HTTP Response
 ```
 
- This keeps the framework's request infrastructure separate from application-specific behavior.
+ OwnWork's kernel creates the Coretex `RouteResolver` and invokes it after the middleware chain completes.
 
-> next: `application/models.md`
+> `application/models.md`

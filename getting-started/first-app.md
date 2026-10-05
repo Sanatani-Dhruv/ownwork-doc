@@ -1,27 +1,35 @@
-# Your First OwnWork Application
+ # Your First OwnWork Application
 
-This guide walks through the basic structure of an OwnWork application and shows how to create a route, view, and controller.
+ This guide walks through the basic structure of an OwnWork application and shows how to create a route, view, and controller.
 
-## Application Entry Point
+ ## Application Entry Point
 
-Every OwnWork request starts at:
+ Every OwnWork request starts at:
 
-```text
+```
 public/index.php
-````
+```
 
  The entry point loads the application bundler:
 
 ```php
 <?php
 
+declare(strict_types = 1);
+
+ob_start();
+
+use Bundle\Bundler;
+
 require __DIR__ . "/../bundle/Bundler.php";
 
 $app = new Bundler();
 $app->bundle();
+
+ob_end_flush();
 ```
 
- The bundler initializes the application and starts the HTTP kernel.
+ `Bundler` initializes the application environment and error handler, then creates the HTTP `Kernel`.
 
  You normally do not need to modify `public/index.php`.
 
@@ -33,7 +41,9 @@ $app->bundle();
 bundle/Routes.php
 ```
 
- A route receives an HTTP method, URL, and handler.
+ The `$route` object is provided when `Routes.php` is loaded by the HTTP kernel.
+
+ A route can use an HTTP method, URL, and handler.
 
  For example:
 
@@ -43,21 +53,9 @@ bundle/Routes.php
 $route->get("/", "home.temp.php");
 ```
 
- This maps:
+ A string route handler is treated as a view name by the Coretex route resolver.
 
-```
-GET /
-```
-
- to:
-
-```
-resources/views/home.temp.php
-```
-
- ## Create the Home View
-
- Create:
+ Create the corresponding view:
 
 ```
 resources/views/home.temp.php
@@ -83,15 +81,17 @@ php worker serve
 http://localhost:8000
 ```
 
- The `/` route will render the view.
+ The `/` route will resolve the string handler and render the corresponding view.
+
+ > Views using the `.temp.php` extension are processed by OwnWork's view transpilation system. The `php worker serve` command itself starts PHP's built-in server; view transpilation is handled separately by the `transpile` worker command.
 
  ## Returning a String
 
- A route does not have to render a view.
+ A route can also use a PHP callable instead of a view name:
 
- A callable can return a string:
+```php
+<?php
 
-```
 $route->get("/hello", function () {
     return "Hello from OwnWork";
 });
@@ -104,6 +104,8 @@ http://localhost:8000/hello
 ```
 
  returns the string from the route handler.
+
+ The route resolver invokes callable handlers directly.
 
  ## Create a Controller
 
@@ -121,12 +123,20 @@ php worker make controller UserController
 app/Controller/UserController.php
 ```
 
- A controller uses the `App\Controller` namespace.
+ The worker creates the controller from:
 
- A basic controller action can be written as:
+```
+resources/template/Controller.php
+```
+
+ The generated controller uses the `App\Controller` namespace and includes an `index()` method that receives Coretex `Request` and `Response` objects.
+
+ A basic controller can be written as:
 
 ```php
 <?php
+
+declare(strict_types = 1);
 
 namespace App\Controller;
 
@@ -148,13 +158,17 @@ class UserController
 
  Import the controller in `bundle/Routes.php`:
 
-```
+```php
+<?php
+
 use App\Controller\UserController;
 ```
 
  Then register the controller action:
 
-```
+```php
+<?php
+
 $route->get("/users", [
     UserController::class,
     "index"
@@ -180,19 +194,66 @@ $route->get("/users", [
 ]);
 ```
 
- The `/users` request is now resolved to:
+ The `/users` request is resolved to:
 
 ```
 UserController::index()
 ```
 
- ## Render a View from a Controller
+ For a two-element controller handler, the route resolver creates an instance of the controller and invokes the specified method with the request and response objects.
 
- Views can be rendered with the global `view()` helper.
+ ## Route Parameters
+
+ OwnWork supports dynamic route parameters using `{parameter}` segments.
 
  For example:
 
+```php
+<?php
+
+$route->get("/users/{id}", [
+    UserController::class,
+    "show"
+]);
 ```
+
+ A request such as:
+
+```
+/users/42
+```
+
+ matches the route and produces:
+
+```
+id = 42
+```
+
+ The dynamic parameters are stored on the request as the `dynamicParams` attribute. They are also passed to controller handlers by the route resolver.
+
+ A controller action can therefore receive the request and response objects followed by the route parameters:
+
+```php
+<?php
+
+public function show(
+    Request $request,
+    Response $response,
+    array $params
+) {
+    return "User: " . $params["id"];
+}
+```
+
+ ## Render a View from a Controller
+
+ Views can be rendered with OwnWork's global `view()` helper.
+
+ For example:
+
+```php
+<?php
+
 public function index(
     Request $request,
     Response $response
@@ -200,6 +261,8 @@ public function index(
     return view("users.temp.php");
 }
 ```
+
+ The `view()` helper delegates to Coretex's view implementation.
 
  Create the corresponding view:
 
@@ -233,13 +296,15 @@ HTTP response
 
  The `view()` helper accepts an array of data:
 
-```
+```php
+<?php
+
 return view("users.temp.php", [
     "title" => "Users",
 ]);
 ```
 
- The supplied values are made available inside the view.
+ The supplied values are passed to the view.
 
  For example:
 
@@ -247,7 +312,9 @@ return view("users.temp.php", [
 <h1>{{ $title }}</h1>
 ```
 
- The `.temp.php` extension indicates that the template should be processed by OwnWork's template system.
+ The `{{ ... }}` syntax is processed by Coretex's template transpiler and converted into an escaped PHP output expression.
+
+ The `.temp.php` extension identifies a template that OwnWork's transpilation system scans and compiles into `storage/views/`.
 
  ## Create Components with the Worker
 
@@ -275,17 +342,35 @@ php worker make service UserService
 php worker make view users
 ```
 
- The worker uses the framework's templates under:
+ The worker supports these component types:
+
+ - `controller`
+- `middleware`
+- `model`
+- `service`
+- `view`
+
+ The generated files are placed in:
+
+```
+app/Controller/
+app/Middleware/
+app/Model/
+app/Service/
+resources/views/
+```
+
+ The worker uses the corresponding templates under:
 
 ```
 resources/template/
 ```
 
- and places generated application files into their corresponding directories.
+ If a generated component already exists, the worker reports that the component already exists instead of replacing it.
 
  ## A Small Application
 
- A minimal application can therefore contain:
+ A minimal application using a controller and views can contain:
 
 ```
 my-app/
@@ -353,6 +438,32 @@ class UserController
 <h1>Users</h1>
 ```
 
+ ## How a Request Is Handled
+
+ At a high level, an OwnWork request follows this process:
+
+```
+public/index.php
+      ↓
+Bundler
+      ↓
+Kernel
+      ↓
+bundle/Routes.php
+      ↓
+Route matching
+      ↓
+Middleware
+      ↓
+RouteResolver
+      ↓
+View / Controller / Callable
+      ↓
+HTTP response
+```
+
+ The `Kernel` creates the request, response, route, and resolver objects, loads `bundle/Routes.php`, matches the request, executes middleware, and passes the selected handler to Coretex's `RouteResolver`.
+
  ## Next Steps
 
  After creating a first application, the main concepts to learn are:
@@ -366,4 +477,4 @@ class UserController
 - services
 - the worker CLI
 
-> next: `getting-started/development.md`
+ > `getting-started/development.md`
