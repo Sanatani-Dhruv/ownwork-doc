@@ -2,7 +2,7 @@
 
  OwnWork provides environment configuration through environment variables and the `env()` helper.
 
- ## `.env`
+ ## .env
 
  Create a `.env` file in the project root:
 

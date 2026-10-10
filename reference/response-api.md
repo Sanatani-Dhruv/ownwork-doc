@@ -31,7 +31,7 @@ return $response->json([
 
  ## Status Code
 
- ### `setCode()`
+ ### setCode()
 
  Set the HTTP status code:
 
@@ -49,7 +49,7 @@ return $response
     ]);
 ```
 
- ### `getCode()`
+ ### getCode()
 
  Retrieve the configured status code:
 
@@ -65,7 +65,7 @@ $code = $response->getCode();
 
  ## Response Body
 
- ### `setBody()`
+ ### setBody()
 
  Set the response body:
 
@@ -81,7 +81,7 @@ return $response
     ->setBody("Hello World");
 ```
 
- ### `getBody()`
+ ### getBody()
 
  Retrieve the current response body:
 
@@ -91,7 +91,7 @@ $body = $response->getBody();
 
  ## JSON Responses
 
- ### `json()`
+ ### json()
 
  Create a JSON response:
 
@@ -124,7 +124,7 @@ return $response->json(
 
  ## HTML Responses
 
- ### `html()`
+ ### html()
 
  Create an HTML response:
 
@@ -153,7 +153,7 @@ Content-Type: text/html; charset=UTF-8
 
  ## No Content
 
- ### `noContent()`
+ ### noContent()
 
  Create a `204 No Content` response:
 
@@ -170,7 +170,7 @@ Body: ""
 
  ## Headers
 
- ### `setHeader()`
+ ### setHeader()
 
  Set an individual response header:
 
@@ -208,7 +208,7 @@ $response->setHeader(
 
  When `$replace` is `false`, multiple values are stored for the same header.
 
- ### `setHeaders()`
+ ### setHeaders()
 
  Set multiple headers:
 
@@ -232,7 +232,7 @@ $response->setHeaders(
 
  The method returns the response object.
 
- ### `getHeaders()`
+ ### getHeaders()
 
  Retrieve the configured headers:
 
@@ -244,7 +244,7 @@ $headers = $response->getHeaders();
 
  ## Content Type
 
- ### `setContentType()`
+ ### setContentType()
 
  Set the response content type:
 
@@ -271,7 +271,7 @@ $response->setContentType(
 
 
 
- ### `isJson()`
+ ### isJson()
 
  Mark the response as JSON:
 
@@ -297,7 +297,7 @@ $response->isJson(false);
 
  The response also maintains a payload array.
 
- ### `setPayload()`
+ ### setPayload()
 
  Set multiple payload values:
 
@@ -334,7 +334,7 @@ $response->setPayload(
 );
 ```
 
- ## `getPayload()`
+ ## getPayload()
 
  Retrieve the current payload:
 
@@ -373,7 +373,7 @@ return $response
 
  ## Dispatching the Response
 
- ### `dispatch()`
+ ### dispatch()
 
  `dispatch()` sends the configured response:
 

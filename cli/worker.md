@@ -23,7 +23,7 @@ transpile
 clear:viewcache
 ```
 
- ## `make`
+ ## make
 
  The `make` command generates application components from the templates under:
 

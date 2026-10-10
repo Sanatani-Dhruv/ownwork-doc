@@ -12,7 +12,7 @@ use Dhruv125\Coretex\Support\Request;
 
  Controllers receive the request and response objects:
 
-```
+```php
 use Dhruv125\Coretex\Support\Request;
 use Dhruv125\Coretex\Support\Response;
 
@@ -35,7 +35,7 @@ public function index(
 
  It also initializes request attributes and determines the current URL from `REQUEST_URI`.
 
- ## `method()`
+ ## method()
 
  Returns the HTTP request method in uppercase.
 
@@ -54,7 +54,7 @@ DELETE
 
  The implementation reads `REQUEST_METHOD` and defaults to `GET` when it is not present.
 
- ## `currentUrl`
+ ## currentUrl
 
  The request exposes the current URL path through the public `currentUrl` property:
 
@@ -66,7 +66,7 @@ $url = $request->currentUrl;
 
  ## GET Data
 
- ### `get()`
+ ### get()
 
  Retrieve one or more GET parameters:
 
@@ -97,7 +97,7 @@ $data = $request->get([
 
  The returned array contains the requested keys. Missing values are returned as `null`. String values are trimmed.
 
- ### `allGet()`
+ ### allGet()
 
  Retrieve all GET parameters:
 
@@ -109,7 +109,7 @@ $query = $request->allGet();
 
  ## POST Data
 
- ### `post()`
+ ### post()
 
  Retrieve one or more POST values:
 
@@ -128,7 +128,7 @@ $data = $request->post([
 
  String values are trimmed, and missing values are returned as `null`.
 
- ### `allPost()`
+ ### allPost()
 
  Retrieve all POST values:
 
@@ -140,7 +140,7 @@ $data = $request->allPost();
 
  ## Combined Request Data
 
- ### `input()`
+ ### input()
 
  `input()` provides access to a specific request source:
 
@@ -178,7 +178,7 @@ $value = $request->input("request", "value");
 
  ## Checking Input
 
- ### `has()`
+ ### has()
 
  Check whether a request value exists:
 
@@ -190,7 +190,7 @@ if ($request->has("email")) {
 
  The method checks the captured `$_REQUEST` data.
 
- ### `missing()`
+ ### missing()
 
  Check whether a request value does not exist:
 
@@ -202,7 +202,7 @@ if ($request->missing("email")) {
 
  It is the inverse of `has()`.
 
- ### `filled()`
+ ### filled()
 
  Check whether a request value exists and contains a meaningful value:
 
@@ -216,7 +216,7 @@ if ($request->filled("email")) {
 
  ## Cookies
 
- ### `allCookie()`
+ ### allCookie()
 
  Retrieve all captured cookies:
 
@@ -224,7 +224,7 @@ if ($request->filled("email")) {
 $cookies = $request->allCookie();
 ```
 
- ### `input()`
+ ### input()
 
  A specific cookie can be read with:
 
@@ -239,7 +239,7 @@ $session = $request->input(
 
  ## Files
 
- ### `file()`
+ ### file()
 
  Retrieve an uploaded file:
 
@@ -260,7 +260,7 @@ $files = $request->file([
 
  The returned array contains each requested file, using `null` for missing entries.
 
- ### `allFile()`
+ ### allFile()
 
  Retrieve all uploaded files:
 
@@ -272,7 +272,7 @@ $files = $request->allFile();
 
  ## Server Values
 
- ### `allServer()`
+ ### allServer()
 
  Retrieve all captured server variables:
 
@@ -280,7 +280,7 @@ $files = $request->allFile();
 $server = $request->allServer();
 ```
 
- ### `input()`
+ ### input()
 
  A specific server value can be accessed with:
 
@@ -295,7 +295,7 @@ $method = $request->input(
 
  ## All Request Data
 
- ### `all()`
+ ### all()
 
  Retrieve the captured request collections:
 
@@ -320,7 +320,7 @@ $data = $request->all();
 
  ## Headers
 
- ### `getHeaders()`
+ ### getHeaders()
 
  Retrieve HTTP headers:
 
@@ -342,7 +342,7 @@ $contentType = $headers["Content-Type"] ?? null;
 
  Request attributes provide a way for framework components such as the router or middleware to attach additional information to the request.
 
- ### `setAttribute()`
+ ### setAttribute()
 
  Set an attribute:
 
@@ -371,7 +371,7 @@ $user = $request->getAttribute("user");
 
  If the attribute does not exist, `null` is returned.
 
- ### `hasAttribute()`
+ ### hasAttribute()
 
  Check whether an attribute exists:
 
@@ -383,7 +383,7 @@ if ($request->hasAttribute("user")) {
 
  Unlike a simple truthiness check, this checks whether the attribute key exists.
 
- ### `removeAttribute()`
+ ### removeAttribute()
 
  Remove an attribute:
 
@@ -407,7 +407,7 @@ $routes = $request->getAttribute(
 
  The `inRoutes()` API uses the `routesArray` request attribute to determine whether a route exists for a particular HTTP method.
 
- ## `inRoutes()`
+ ## inRoutes()
 
  Check whether a route exists for a supplied HTTP method:
 

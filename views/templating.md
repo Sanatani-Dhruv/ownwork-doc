@@ -108,7 +108,7 @@ $name = "OwnWork";
 
  ## Conditionals
 
- ### `@if`
+ ### @if
 
 ```
 @if($user):
@@ -116,7 +116,7 @@ $name = "OwnWork";
 @endif;
 ```
 
- ### `@else`
+ ### @else
 
 ```
 @if($user):
@@ -126,7 +126,7 @@ $name = "OwnWork";
 @endif;
 ```
 
- ### `@elseif`
+ ### @elseif
 
 ```
 @if($role === "admin"):

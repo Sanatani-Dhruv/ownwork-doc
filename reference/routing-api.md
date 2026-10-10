@@ -13,14 +13,12 @@ bundle/Routes.php
  Routes are registered on the `$route` instance:
 
 ```php
-<?php
 $route->get("/", "main.temp.php");
 ```
 
  A controller action can also be used:
 
 ```php
-<?php
 $route->get("/users", [
     UserController::class,
     "index"
@@ -34,7 +32,6 @@ $route->get("/users", [
  Register a GET route with:
 
 ```php
-<?php
 $route->get("/users", [
     UserController::class,
     "index"
@@ -44,7 +41,6 @@ $route->get("/users", [
  GET routes can also directly resolve to a view:
 
 ```php
-<?php
 $route->get("/", "main.temp.php");
 ```
 
@@ -53,7 +49,6 @@ $route->get("/", "main.temp.php");
  Register a POST route with:
 
 ```php
-<?php
 $route->post("/users", [
     UserController::class,
     "store"
@@ -63,7 +58,6 @@ $route->post("/users", [
  ## PUT Routes
 
 ```php
-<?php
 $route->put("/users/{id}", [
     UserController::class,
     "update"
@@ -73,7 +67,6 @@ $route->put("/users/{id}", [
  ## PATCH Routes
 
 ```php
-<?php
 $route->patch("/users/{id}", [
     UserController::class,
     "update"
@@ -83,7 +76,6 @@ $route->patch("/users/{id}", [
  ## DELETE Routes
 
 ```php
-<?php
 $route->delete("/users/{id}", [
     UserController::class,
     "destroy"
@@ -95,7 +87,6 @@ $route->delete("/users/{id}", [
  Route paths begin with `/`:
 
 ```php
-<?php
 $route->get("/about", [
     PageController::class,
     "about"
@@ -109,7 +100,6 @@ $route->get("/about", [
  Dynamic parameters use `{name}` syntax:
 
 ```php
-<?php
 $route->get("/users/{id}", [
     UserController::class,
     "show"
@@ -137,7 +127,6 @@ $request->getAttribute("dynamicParams");
  For example:
 
 ```php
-<?php
 $params = $request->getAttribute(
     "dynamicParams"
 );
@@ -152,7 +141,6 @@ $id = $params["id"];
  A route can contain multiple parameters:
 
 ```php
-<?php
 $route->get("/users/{id}/{name}", [
     UserController::class,
     "show"
@@ -168,7 +156,6 @@ $route->get("/users/{id}/{name}", [
  produces parameters equivalent to:
 
 ```php
-<?php
 [
     "id" => "12",
     "name" => "someone"
@@ -180,7 +167,6 @@ $route->get("/users/{id}/{name}", [
  Controller handlers are normally represented as:
 
 ```php
-<?php
 [
     UserController::class,
     "index"
@@ -190,7 +176,6 @@ $route->get("/users/{id}/{name}", [
  For example:
 
 ```php
-<?php
 $route->get("/users", [
     UserController::class,
     "index"
@@ -202,7 +187,6 @@ $route->get("/users", [
  A controller can therefore use:
 
 ```php
-<?php
 public function index(
     Request $request,
     Response $response
@@ -268,21 +252,18 @@ $result = $route->end();
  The current route is available as:
 
 ```php
-<?php
 $request->getAttribute("currentRoute");
 ```
 
  The registered route information is available as:
 
 ```php
-<?php
 $request->getAttribute("routesArray");
 ```
 
  Dynamic parameters are available as:
 
 ```php
-<?php
 $request->getAttribute("dynamicParams");
 ```
 
@@ -321,7 +302,6 @@ bundle/Routes.php
  A typical route file can contain:
 
 ```php
-<?php
 <?php
 
 namespace Bundle;
@@ -362,7 +342,6 @@ $route->post("/users", [
 ## Example
 
 ```php
-<?php
 $route->get("/", "main.temp.php");
 
 $route->get("/users", [

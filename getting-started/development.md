@@ -111,7 +111,7 @@ ERROR_PAGE_LOCATION=resources/appviews/
 
  from the application root and makes its values available through `$_ENV`.
 
- ### `DEV_ENV`
+ ### DEV_ENV
 
  `DEV_ENV` controls development error display.
 
@@ -129,7 +129,7 @@ E_ALL ^ E_DEPRECATED
 
  When development mode is not enabled, Coretex does not enable the development error display settings.
 
- ### `OWNWORK_ERROR_HANDLER`
+ ### OWNWORK_ERROR_HANDLER
 
  `OWNWORK_ERROR_HANDLER` controls whether OwnWork's global error and exception handler is registered.
 
@@ -146,7 +146,7 @@ storage/error.log
 
  It then displays either a development error page or a generic `500 Internal Server Error`, depending on `DEV_ENV`.
 
- ### `ERROR_PAGE_LOCATION`
+ ### ERROR_PAGE_LOCATION
 
  The example environment file contains:
 

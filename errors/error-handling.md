@@ -26,7 +26,7 @@ Dhruv125\Coretex\Pager
 
  OwnWork's error handling behavior is controlled through environment variables.
 
- ### `OWNWORK_ERROR_HANDLER`
+ ### OWNWORK_ERROR_HANDLER
 
  Controls whether OwnWork's error handler is used.
 
@@ -40,7 +40,7 @@ OWNWORK_ERROR_HANDLER=true
 
  If `OWNWORK_ERROR_HANDLER` is disabled, `DEV_ENV` does not control the OwnWork error page.
 
- ### `DEV_ENV`
+ ### DEV_ENV
 
  Controls the amount of information shown by the OwnWork error handler.
 
@@ -114,7 +114,7 @@ ViewNotFoundException
 Dhruv125\Coretex\Exceptions\
 ```
 
- ## `PageNotFoundException`
+ ## PageNotFoundException
 
  Use `PageNotFoundException` when an application operation determines that a requested page does not exist.
 
@@ -142,7 +142,7 @@ if (!$user) {
 
  The view system provides exceptions for missing view resources.
 
- ### `ViewNotFoundException`
+ ### ViewNotFoundException
 
  Indicates that a requested view could not be resolved.
 
@@ -150,7 +150,7 @@ if (!$user) {
 ViewNotFoundException
 ```
 
- ### `ViewJsonNotFoundException`
+ ### ViewJsonNotFoundException
 
  Indicates that required view mapping information could not be resolved.
 

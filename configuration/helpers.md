@@ -2,7 +2,7 @@
 
  OwnWork provides global helpers for application paths, environment values, views, components, and transpiled templates.
 
- ## `approot()`
+ ## approot()
 
  Returns the application root directory.
 
@@ -17,7 +17,7 @@ $viewPath = approot() . "/resources/views/";
 $storagePath = approot() . "/storage/";
 ```
 
- ## `env()`
+ ## env()
 
  Reads an environment variable:
 
@@ -48,7 +48,7 @@ env("APP_DEBUG");
 
  See Environment Configuration.
 
- ## `view()`
+ ## view()
 
  Renders an application view:
 
@@ -70,7 +70,7 @@ return view("users/index.temp.php", [
 resources/views/
 ```
 
- ## `comp()`
+ ## comp()
 
  The `comp()` helper renders a component.
 
@@ -98,7 +98,7 @@ comp("button", [
 
  See Components.
 
- ## `getTempTranspiled()`
+ ## getTempTranspiled()
 
  `getTempTranspiled()` resolves a transpiled template for the template include mechanism.
 

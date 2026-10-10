@@ -2,7 +2,7 @@
 
  OwnWork provides global helper functions through `bundle/Helper.php`. The file is registered through Composer's `autoload.files`, so these helpers are available throughout the application.
 
- ## `approot()`
+ ## approot()
 
  Returns the application root directory.
 
@@ -17,7 +17,7 @@ $viewPath = approot() . "/resources/views/";
 $storagePath = approot() . "/storage/";
 ```
 
- ## `env()`
+ ## env()
 
  Reads or writes an environment variable.
 
@@ -45,7 +45,7 @@ env("APP_NAME=My Application", false);
 
  OwnWork's current helper delegates to PHP's `getenv()` and `putenv()`.
 
- ## `out()`
+ ## out()
 
  Escapes a string for HTML output.
 
@@ -61,7 +61,7 @@ htmlspecialchars($data)
 
  This is useful when displaying a value that should be treated as HTML text rather than markup.
 
- ## `view()`
+ ## view()
 
  Renders a view through Coretex.
 
@@ -79,7 +79,7 @@ view("users/index.temp.php", [
 
  The helper delegates to `Dhruv125\Coretex\Viewer\View::instantView()`.
 
- ## `getTempTranspiled()`
+ ## getTempTranspiled()
 
  Resolves and includes a transpiled template.
 
@@ -99,7 +99,7 @@ getTempTranspiled(
 
  The helper delegates to Coretex's `View::includeTemp()`. It is used by the template system for `@@includeTemp(...)`.
 
- ## `comp()`
+ ## comp()
 
  Renders a component.
 
@@ -143,7 +143,7 @@ resources/views/component/
 
  uses this helper.
 
- ## `url()`
+ ## url()
 
  Provides information about the current request URL.
 
@@ -175,7 +175,7 @@ $fullUrl = url("getFull");
 
  `url("get")` resolves the path from `$_SERVER["REQUEST_URI"]`, while `url("getFull")` returns the complete request URI.
 
- ## `pre()`
+ ## pre()
 
  Prints a value inside a `<pre>` element.
 
@@ -191,7 +191,7 @@ pre($users);
 
  This is primarily useful for simple debugging during development.
 
- ## `get_db_instance()`
+ ## get_db_instance()
 
  Returns a database instance when the optional `delight-im/db` dependency is available and configured.
 
@@ -230,7 +230,7 @@ storage/db/
 
  This helper is optional application infrastructure rather than a required part of OwnWork's MVC flow.
 
- ## `clean()`
+ ## clean()
 
  The current OwnWork helper also provides:
 
@@ -302,7 +302,7 @@ false
 
  The first element contains the non-empty entries and the second contains the keys of empty entries.
 
- ## `printArr()`
+ ## printArr()
 
  Prints an array inside a `<pre>` element.
 
@@ -312,7 +312,7 @@ printArr($array);
 
  It is a convenience debugging helper around `print_r()`.
 
- ## `isUrl()`
+ ## isUrl()
 
  Checks whether the current URL matches a supplied URL.
 
